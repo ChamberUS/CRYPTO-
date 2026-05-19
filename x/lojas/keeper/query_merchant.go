@@ -12,8 +12,6 @@ import (
 )
 
 func redactMerchantPublic(m types.Merchant) types.Merchant {
-	m.Cpfcnpj = ""
-	m.Telefone = ""
 	return m
 }
 

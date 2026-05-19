@@ -81,9 +81,11 @@ message MsgCreateMerchant {
   string creator  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string nome     = 2;
   string endereco = 3;
-  string cpfcnpj  = 4;
-  string telefone = 5;
-  string saldo    = 6;
+  reserved 4, 5, 6;
+  string operator_address = 7 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string kyc_ref = 8;
+  string document_hash = 9;
+  string kyc_status = 10;
 }
 
 message MsgCreateMerchantResponse {
@@ -96,9 +98,11 @@ message MsgUpdateMerchant {
   uint64 id       = 2;
   string nome     = 3;
   string endereco = 4;
-  string cpfcnpj  = 5;
-  string telefone = 6;
-  string saldo    = 7;
+  reserved 5, 6, 7;
+  string operator_address = 8 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string kyc_ref = 9;
+  string document_hash = 10;
+  string kyc_status = 11;
 }
 
 message MsgUpdateMerchantResponse {}

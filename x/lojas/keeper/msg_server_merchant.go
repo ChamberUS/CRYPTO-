@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/buynnex-corp/byx/x/lojas/types"
 
@@ -12,9 +14,47 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+func validateKYCStatus(status string) (string, error) {
+	if status == "" {
+		return "pending", nil
+	}
+	switch status {
+	case "pending", "approved", "rejected", "suspended":
+		return status, nil
+	default:
+		return "", errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "kyc_status inválido")
+	}
+}
+
+func validateDocumentHash(hash string) error {
+	if hash == "" {
+		return nil
+	}
+	if len(hash) != 64 {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "document_hash deve ter 64 caracteres hex")
+	}
+	if _, err := hex.DecodeString(strings.ToLower(hash)); err != nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "document_hash inválido (esperado SHA-256 hex)")
+	}
+	return nil
+}
+
 func (k msgServer) CreateMerchant(ctx context.Context, msg *types.MsgCreateMerchant) (*types.MsgCreateMerchantResponse, error) {
 	if _, err := k.addressCodec.StringToBytes(msg.Creator); err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid address: %s", err))
+	}
+	operator := msg.OperatorAddress
+	if operator != "" {
+		if _, err := k.addressCodec.StringToBytes(operator); err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid operator address: %s", err))
+		}
+	}
+	if err := validateDocumentHash(msg.DocumentHash); err != nil {
+		return nil, err
+	}
+	kycStatus, err := validateKYCStatus(msg.KycStatus)
+	if err != nil {
+		return nil, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -22,15 +62,15 @@ func (k msgServer) CreateMerchant(ctx context.Context, msg *types.MsgCreateMerch
 	id := k.AllocateMerchantID(sdkCtx)
 
 	merchant := types.Merchant{
-		Id:       id,
-		Creator:  msg.Creator,
-		Nome:     msg.Nome,
-		Endereco: msg.Endereco,
-		// P0 hardening: nunca persistir PII em claro on-chain.
-		Cpfcnpj:  "",
-		Telefone: "",
-		// P0 hardening: saldo não vem da mensagem do usuário.
-		Saldo: "0",
+		Id:              id,
+		Creator:         msg.Creator,
+		Nome:            msg.Nome,
+		Endereco:        msg.Endereco,
+		Saldo:           "0",
+		OperatorAddress: operator,
+		KycRef:          msg.KycRef,
+		DocumentHash:    msg.DocumentHash,
+		KycStatus:       kycStatus,
 	}
 
 	if err := k.SetMerchant(sdkCtx, merchant); err != nil {
@@ -69,16 +109,34 @@ func (k msgServer) UpdateMerchant(ctx context.Context, msg *types.MsgUpdateMerch
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 
+	if err := validateDocumentHash(msg.DocumentHash); err != nil {
+		return nil, err
+	}
+	kycStatus, err := validateKYCStatus(msg.KycStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	operator := current.OperatorAddress
+	if msg.OperatorAddress != "" {
+		operator = msg.OperatorAddress
+	}
+	if operator != "" {
+		if _, err := k.addressCodec.StringToBytes(operator); err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid operator address: %s", err))
+		}
+	}
+
 	merchant := types.Merchant{
-		Creator:  current.Creator,
-		Id:       current.Id,
-		Nome:     msg.Nome,
-		Endereco: msg.Endereco,
-		// P0 hardening: PII não deve ser persistido em claro.
-		Cpfcnpj:  "",
-		Telefone: "",
-		// P0 hardening: preservar saldo atual, ignorar msg.Saldo.
-		Saldo: current.Saldo,
+		Creator:         current.Creator,
+		Id:              current.Id,
+		Nome:            msg.Nome,
+		Endereco:        msg.Endereco,
+		Saldo:           current.Saldo,
+		OperatorAddress: operator,
+		KycRef:          msg.KycRef,
+		DocumentHash:    msg.DocumentHash,
+		KycStatus:       kycStatus,
 	}
 
 	if err := k.SetMerchant(sdkCtx, merchant); err != nil {

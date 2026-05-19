@@ -12,9 +12,9 @@ import (
 // CmdCreateMerchant cria um novo merchant
 func CmdCreateMerchant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-merchant [nome] [endereco] [cpfcnpj] [telefone] [saldo]",
+		Use:   "create-merchant [nome] [endereco] [operator-address]",
 		Short: "Cria um novo merchant",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -22,12 +22,10 @@ func CmdCreateMerchant() *cobra.Command {
 			}
 
 			msg := &types.MsgCreateMerchant{
-				Creator:  clientCtx.GetFromAddress().String(),
-				Nome:     args[0],
-				Endereco: args[1],
-				Cpfcnpj:  args[2],
-				Telefone: args[3],
-				Saldo:    args[4], // string, ex: "1000"
+				Creator:         clientCtx.GetFromAddress().String(),
+				Nome:            args[0],
+				Endereco:        args[1],
+				OperatorAddress: args[2],
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

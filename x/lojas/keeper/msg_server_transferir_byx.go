@@ -47,7 +47,7 @@ func (k msgServer) TransferirByx(ctx context.Context, msg *types.MsgTransferirBy
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "falha ao ler params do módulo")
 	}
 	isOwner := msg.Creator == from.Creator
-	isOperator := msg.Creator == from.Endereco
+	isOperator := from.OperatorAddress != "" && msg.Creator == from.OperatorAddress
 	isAdmin := params.FaucetAdmin != "" && msg.Creator == params.FaucetAdmin
 	if !isOwner && !isOperator && !isAdmin {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "creator não autorizado para transferir da loja de origem")

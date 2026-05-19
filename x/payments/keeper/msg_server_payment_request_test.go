@@ -77,6 +77,28 @@ func TestCreatePaymentRequestUnauthorizedCreator(t *testing.T) {
 	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 }
 
+func TestCreatePaymentRequestAuthorizedOperator(t *testing.T) {
+	f := initFixture(t)
+	ms := keeper.NewMsgServerImpl(f.keeper)
+
+	operatorAddr := sdk.AccAddress(bytes.Repeat([]byte{0x0a}, 20))
+	operatorStr, err := f.addressCodec.BytesToString(operatorAddr)
+	require.NoError(t, err)
+
+	merchant := f.lojas.merchants[1]
+	merchant.OperatorAddress = operatorStr
+	f.lojas.merchants[1] = merchant
+
+	resp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
+		Creator:        operatorStr,
+		LojaId:         1,
+		AmountMicrobyx: 1200,
+		Memo:           "operator-pos",
+	})
+	require.NoError(t, err)
+	require.NotZero(t, resp.Id)
+}
+
 func TestCreatePaymentRequestDedupReusesPending(t *testing.T) {
 	f := initFixture(t)
 	ms := keeper.NewMsgServerImpl(f.keeper)

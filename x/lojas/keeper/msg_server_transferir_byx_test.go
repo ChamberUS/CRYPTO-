@@ -31,16 +31,16 @@ func TestTransferirByx(t *testing.T) {
 	require.NoError(t, f.keeper.ParamsStore.Set(sdkCtx, params))
 
 	require.NoError(t, f.keeper.SetMerchant(sdkCtx, types.Merchant{
-		Id:       1,
-		Creator:  owner,
-		Endereco: operator,
-		Saldo:    "100",
+		Id:              1,
+		Creator:         owner,
+		OperatorAddress: operator,
+		Saldo:           "100",
 	}))
 	require.NoError(t, f.keeper.SetMerchant(sdkCtx, types.Merchant{
-		Id:       2,
-		Creator:  other,
-		Endereco: other,
-		Saldo:    "10",
+		Id:              2,
+		Creator:         other,
+		OperatorAddress: other,
+		Saldo:           "10",
 	}))
 
 	t.Run("dono transfere: passa", func(t *testing.T) {
@@ -61,6 +61,35 @@ func TestTransferirByx(t *testing.T) {
 			Valor:         "1",
 		})
 		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+	})
+
+	t.Run("sem operador terceiro segue bloqueado", func(t *testing.T) {
+		from, err := f.keeper.GetMerchant(f.ctx, 1)
+		require.NoError(t, err)
+		from.OperatorAddress = ""
+		require.NoError(t, f.keeper.SetMerchant(sdkCtx, from))
+
+		_, err = ms.TransferirByx(f.ctx, &types.MsgTransferirByx{
+			Creator:       other,
+			DeLojistaId:   "1",
+			ParaLojistaId: "2",
+			Valor:         "1",
+		})
+		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+
+		// restaura para os próximos casos deste teste.
+		from.OperatorAddress = operator
+		require.NoError(t, f.keeper.SetMerchant(sdkCtx, from))
+	})
+
+	t.Run("operador autorizado transfere: passa", func(t *testing.T) {
+		_, err := ms.TransferirByx(f.ctx, &types.MsgTransferirByx{
+			Creator:       operator,
+			DeLojistaId:   "1",
+			ParaLojistaId: "2",
+			Valor:         "1",
+		})
+		require.NoError(t, err)
 	})
 
 	t.Run("saldo insuficiente: falha", func(t *testing.T) {

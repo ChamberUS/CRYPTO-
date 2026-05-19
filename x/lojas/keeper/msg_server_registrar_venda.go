@@ -44,9 +44,10 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 		return nil, err
 	}
 
-	// Opcional: garantir que o creator é o mesmo que o creator do merchant
-	if merchant.Creator != msg.Creator {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only merchant creator can register sales")
+	// Garantir que o creator seja dono ou operador explícito da loja.
+	isOperator := merchant.OperatorAddress != "" && merchant.OperatorAddress == msg.Creator
+	if merchant.Creator != msg.Creator && !isOperator {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only merchant owner or operator can register sales")
 	}
 
 	params, err := m.ParamsStore.Get(ctx)

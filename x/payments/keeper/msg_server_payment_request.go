@@ -39,8 +39,9 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 		}
 		return nil, err
 	}
-	// Somente dono da loja (creator) ou operador (endereco) pode abrir request.
-	if msg.Creator != merchant.Creator && msg.Creator != merchant.Endereco {
+	// Somente dono da loja (creator) ou operador explícito pode abrir request.
+	isOperator := merchant.OperatorAddress != "" && msg.Creator == merchant.OperatorAddress
+	if msg.Creator != merchant.Creator && !isOperator {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "creator not authorized for this merchant")
 	}
 

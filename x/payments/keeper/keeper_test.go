@@ -72,8 +72,9 @@ func initFixture(t *testing.T) *fixture {
 		t.Fatalf("failed to convert merchant addr: %v", err)
 	}
 	lojasKeeper.merchants[1] = lojas.Merchant{
-		Id:      1,
-		Creator: merchantStr,
+		Id:              1,
+		Creator:         merchantStr,
+		OperatorAddress: merchantStr,
 	}
 
 	payerAddr := sdk.AccAddress(bytes.Repeat([]byte{0x02}, 20))

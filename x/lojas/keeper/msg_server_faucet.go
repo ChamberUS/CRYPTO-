@@ -89,9 +89,13 @@ func (k msgServer) Faucet(goCtx context.Context, msg *types.MsgFaucet) (*types.M
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "falha ao carregar lojista")
 	}
 
-	lojistaAddr, err := sdk.AccAddressFromBech32(lojista.Endereco)
+	recipient := lojista.OperatorAddress
+	if recipient == "" {
+		recipient = lojista.Creator
+	}
+	lojistaAddr, err := sdk.AccAddressFromBech32(recipient)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "endereço do lojista inválido")
+		return nil, status.Error(codes.InvalidArgument, "endereço operacional do lojista inválido")
 	}
 
 	// 7) Somar saldo (string -> Int -> soma -> string)

@@ -3,10 +3,13 @@ package types
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestParamsValidateRanges(t *testing.T) {
+	validAdmin := sdk.AccAddress(make([]byte, 20)).String()
+
 	cases := []struct {
 		name   string
 		params Params
@@ -20,6 +23,7 @@ func TestParamsValidateRanges(t *testing.T) {
 			name: "faucet max empty allowed",
 			params: Params{
 				FaucetEnabled:                   true,
+				FaucetAdmin:                     validAdmin,
 				FaucetMaxPerTx:                  "",
 				CashbackRateMicroByxPerReal:     100,
 				MaxValorVendaEmCentavos:         1_000,
@@ -33,6 +37,7 @@ func TestParamsValidateRanges(t *testing.T) {
 			name: "cashback too high",
 			params: Params{
 				FaucetEnabled:               true,
+				FaucetAdmin:                 validAdmin,
 				FaucetMaxPerTx:              "10",
 				CashbackRateMicroByxPerReal: 2_000_000,
 				MaxValorVendaEmCentavos:     1_000,
@@ -44,6 +49,7 @@ func TestParamsValidateRanges(t *testing.T) {
 			name: "max valor zero",
 			params: Params{
 				FaucetEnabled:               true,
+				FaucetAdmin:                 validAdmin,
 				FaucetMaxPerTx:              "10",
 				CashbackRateMicroByxPerReal: 100,
 				MaxValorVendaEmCentavos:     0,
@@ -55,6 +61,7 @@ func TestParamsValidateRanges(t *testing.T) {
 			name: "max cashback too high",
 			params: Params{
 				FaucetEnabled:               true,
+				FaucetAdmin:                 validAdmin,
 				FaucetMaxPerTx:              "10",
 				CashbackRateMicroByxPerReal: 100,
 				MaxValorVendaEmCentavos:     1_000,
@@ -78,6 +85,7 @@ func TestParamsValidateRanges(t *testing.T) {
 			name: "invalid retention",
 			params: Params{
 				FaucetEnabled:                   true,
+				FaucetAdmin:                     validAdmin,
 				FaucetMaxPerTx:                  "10",
 				CashbackRateMicroByxPerReal:     100,
 				MaxValorVendaEmCentavos:         1_000,

@@ -133,38 +133,96 @@ func TestMerchantSaldoAndPIIHardening(t *testing.T) {
 	require.NoError(t, err)
 
 	createResp, err := srv.CreateMerchant(f.ctx, &types.MsgCreateMerchant{
-		Creator:  creator,
-		Nome:     "Loja Segura",
-		Endereco: creator,
-		Cpfcnpj:  "12345678901",
-		Telefone: "11999999999",
-		Saldo:    "999999",
+		Creator:         creator,
+		Nome:            "Loja Segura",
+		Endereco:        "Rua A, 123",
+		OperatorAddress: creator,
+		KycRef:          "kyc-local-1",
+		DocumentHash:    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		KycStatus:       "approved",
 	})
 	require.NoError(t, err)
 
 	created, err := f.keeper.GetMerchant(f.ctx, createResp.Id)
 	require.NoError(t, err)
-	require.Equal(t, "0", created.Saldo, "create must ignore user-provided saldo")
-	require.Equal(t, "", created.Cpfcnpj, "cpfcnpj must not be persisted")
-	require.Equal(t, "", created.Telefone, "telefone must not be persisted")
+	require.Equal(t, "0", created.Saldo, "create must always initialize saldo to zero")
+	require.Equal(t, creator, created.OperatorAddress)
+	require.Equal(t, "kyc-local-1", created.KycRef)
+	require.Equal(t, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", created.DocumentHash)
+	require.Equal(t, "approved", created.KycStatus)
 
 	created.Saldo = "77"
 	require.NoError(t, f.keeper.SetMerchant(sdk.UnwrapSDKContext(f.ctx), created))
 
 	_, err = srv.UpdateMerchant(f.ctx, &types.MsgUpdateMerchant{
-		Creator:  creator,
-		Id:       createResp.Id,
-		Nome:     "Loja Segura 2",
-		Endereco: creator,
-		Cpfcnpj:  "00000000000",
-		Telefone: "11888888888",
-		Saldo:    "123456",
+		Creator:         creator,
+		Id:              createResp.Id,
+		Nome:            "Loja Segura 2",
+		Endereco:        "Rua B, 999",
+		OperatorAddress: creator,
+		KycRef:          "kyc-local-2",
+		DocumentHash:    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		KycStatus:       "rejected",
 	})
 	require.NoError(t, err)
 
 	updated, err := f.keeper.GetMerchant(f.ctx, createResp.Id)
 	require.NoError(t, err)
 	require.Equal(t, "77", updated.Saldo, "update must preserve existing saldo")
-	require.Equal(t, "", updated.Cpfcnpj, "cpfcnpj must remain redacted")
-	require.Equal(t, "", updated.Telefone, "telefone must remain redacted")
+	require.Equal(t, "kyc-local-2", updated.KycRef)
+	require.Equal(t, "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", updated.DocumentHash)
+	require.Equal(t, "rejected", updated.KycStatus)
+}
+
+func TestMerchantValidationOperatorKYCAndHash(t *testing.T) {
+	f := initFixture(t)
+	srv := keeper.NewMsgServerImpl(f.keeper)
+
+	creator, err := f.addressCodec.BytesToString([]byte("owner_validation___________"))
+	require.NoError(t, err)
+
+	t.Run("invalid operator address fails", func(t *testing.T) {
+		_, err := srv.CreateMerchant(f.ctx, &types.MsgCreateMerchant{
+			Creator:         creator,
+			Nome:            "Loja",
+			Endereco:        "Rua X",
+			OperatorAddress: "invalid",
+		})
+		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
+	})
+
+	t.Run("invalid kyc status fails", func(t *testing.T) {
+		_, err := srv.CreateMerchant(f.ctx, &types.MsgCreateMerchant{
+			Creator:   creator,
+			Nome:      "Loja",
+			Endereco:  "Rua X",
+			KycStatus: "unknown",
+		})
+		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+	})
+
+	t.Run("invalid document hash fails", func(t *testing.T) {
+		_, err := srv.CreateMerchant(f.ctx, &types.MsgCreateMerchant{
+			Creator:      creator,
+			Nome:         "Loja",
+			Endereco:     "Rua X",
+			DocumentHash: "abc",
+		})
+		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+	})
+
+	t.Run("empty operator allowed", func(t *testing.T) {
+		resp, err := srv.CreateMerchant(f.ctx, &types.MsgCreateMerchant{
+			Creator:      creator,
+			Nome:         "Loja Ok",
+			Endereco:     "Rua Y",
+			KycStatus:    "pending",
+			DocumentHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		})
+		require.NoError(t, err)
+
+		m, err := f.keeper.GetMerchant(f.ctx, resp.Id)
+		require.NoError(t, err)
+		require.Equal(t, "", m.OperatorAddress)
+	})
 }

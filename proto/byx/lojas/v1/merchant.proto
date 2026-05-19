@@ -8,8 +8,11 @@ message Merchant {
   uint64 id = 1;
   string nome = 2;
   string endereco = 3;
-  string cpfcnpj = 4;
-  string telefone = 5;
+  reserved 4, 5;
   string saldo = 6;
   string creator = 7;
+  string operator_address = 8;
+  string kyc_ref = 9;
+  string document_hash = 10;
+  string kyc_status = 11;
 }
