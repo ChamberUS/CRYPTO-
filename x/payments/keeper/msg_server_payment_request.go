@@ -181,6 +181,9 @@ func (m msgServer) payAndMarkPaid(ctx sdk.Context, pr *types.PaymentRequest, pay
 	if err := m.bankKeeper.SendCoins(ctx, payerAddr, merchantAddr, sdk.NewCoins(amount)); err != nil {
 		return "", err
 	}
+	if err := m.lojasKeeper.AddMerchantSaldo(sdk.WrapSDKContext(ctx), pr.LojaId, amount.Amount); err != nil {
+		return "", err
+	}
 
 	now := ctx.BlockTime().UTC()
 	pr.Status = types.PaymentStatus_PAYMENT_STATUS_PAID

@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -128,6 +129,20 @@ func (m *mockLojasKeeper) GetMerchant(_ context.Context, id uint64) (lojas.Merch
 		return lojas.Merchant{}, collections.ErrNotFound
 	}
 	return merchant, nil
+}
+
+func (m *mockLojasKeeper) AddMerchantSaldo(_ context.Context, id uint64, amount sdkmath.Int) error {
+	merchant, ok := m.merchants[id]
+	if !ok {
+		return collections.ErrNotFound
+	}
+	current, ok := sdkmath.NewIntFromString(merchant.Saldo)
+	if !ok {
+		current = sdkmath.ZeroInt()
+	}
+	merchant.Saldo = current.Add(amount).String()
+	m.merchants[id] = merchant
+	return nil
 }
 
 type mockCertificadosKeeper struct {

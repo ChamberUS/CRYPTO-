@@ -7,6 +7,7 @@ import (
 	"github.com/buynnex-corp/byx/x/lojas/types"
 
 	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -55,6 +56,27 @@ func (k Keeper) SetMerchant(ctx sdk.Context, merchant types.Merchant) error {
 		k.SetNextMerchantID(ctx, merchant.Id+1)
 	}
 	return nil
+}
+
+// AddMerchantSaldo credits amount to Merchant.Saldo preserving fixed supply
+// (it only updates bookkeeping state; no mint occurs here).
+func (k Keeper) AddMerchantSaldo(ctx context.Context, id uint64, amount sdkmath.Int) error {
+	if !amount.IsPositive() {
+		return nil
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	merchant, err := k.GetMerchant(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	current, ok := sdkmath.NewIntFromString(merchant.Saldo)
+	if !ok {
+		current = sdkmath.ZeroInt()
+	}
+	merchant.Saldo = current.Add(amount).String()
+	return k.SetMerchant(sdkCtx, merchant)
 }
 
 func (k Keeper) getMerchant(ctx sdk.Context, id uint64) (types.Merchant, bool) {

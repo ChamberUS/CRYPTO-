@@ -6,6 +6,7 @@ import (
 	certificadostypes "github.com/buynnex-corp/byx/x/certificados/types"
 	lojastypes "github.com/buynnex-corp/byx/x/lojas/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,6 +18,7 @@ type BankKeeper interface {
 // LojasKeeper defines the expected subset we need from x/lojas.
 type LojasKeeper interface {
 	GetMerchant(context.Context, uint64) (lojastypes.Merchant, error)
+	AddMerchantSaldo(context.Context, uint64, sdkmath.Int) error
 }
 
 // CertificadosKeeper defines the expected subset we need from x/certificados.

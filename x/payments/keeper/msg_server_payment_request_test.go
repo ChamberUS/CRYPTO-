@@ -154,6 +154,7 @@ func TestPayPaymentRequest(t *testing.T) {
 
 	require.Equal(t, int64(998000), f.bank.balances[payerStr])
 	require.Equal(t, int64(2000), f.bank.balances[merchantStr])
+	require.Equal(t, "2000", f.lojas.merchants[1].Saldo)
 
 	// dedupe must be cleared after pay
 	_, found = f.keeper.GetDedupeRequestID(sdk.UnwrapSDKContext(f.ctx), 1, 2_000, "")
