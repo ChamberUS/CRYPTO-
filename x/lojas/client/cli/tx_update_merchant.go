@@ -14,9 +14,9 @@ import (
 // CmdUpdateMerchant atualiza um merchant existente
 func CmdUpdateMerchant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-merchant [id] [nome] [endereco] [operator-address]",
+		Use:   "update-merchant [id] [nome] [endereco] [operator-address] [kyc-ref] [document-hash] [kyc-status]",
 		Short: "Atualiza um merchant",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -34,6 +34,9 @@ func CmdUpdateMerchant() *cobra.Command {
 				Nome:            args[1],
 				Endereco:        args[2],
 				OperatorAddress: args[3],
+				KycRef:          args[4],
+				DocumentHash:    args[5],
+				KycStatus:       args[6],
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

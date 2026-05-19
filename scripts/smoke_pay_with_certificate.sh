@@ -17,9 +17,10 @@ PAYER_KEY="${PAYER_KEY:-roberta}"
 
 MERCHANT_NAME="${MERCHANT_NAME:-IAOS Store}"
 MERCHANT_ADDR="${MERCHANT_ADDR:-Rua 1}"
-MERCHANT_DOC="${MERCHANT_DOC:-00000000000000}"
-MERCHANT_PHONE="${MERCHANT_PHONE:-0000000000}"
-MERCHANT_SALDO="${MERCHANT_SALDO:-0}"
+MERCHANT_OPERATOR="${MERCHANT_OPERATOR:-}"
+MERCHANT_KYC_REF="${MERCHANT_KYC_REF:-smoke-kyc-ref}"
+MERCHANT_DOCUMENT_HASH="${MERCHANT_DOCUMENT_HASH:-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}"
+MERCHANT_KYC_STATUS="${MERCHANT_KYC_STATUS:-approved}"
 
 AMOUNT_MICROBYX="${AMOUNT_MICROBYX:-2000}"
 
@@ -71,7 +72,7 @@ ensure_merchant() {
   fi
 
   echo "merchant not found for creator; creating one..." >&2
-  tx_json="$(byxd tx lojas create-merchant "${MERCHANT_NAME}" "${MERCHANT_ADDR}" "${MERCHANT_DOC}" "${MERCHANT_PHONE}" "${MERCHANT_SALDO}" \
+  tx_json="$(byxd tx lojas create-merchant "${MERCHANT_NAME}" "${MERCHANT_ADDR}" "${MERCHANT_OPERATOR}" "${MERCHANT_KYC_REF}" "${MERCHANT_DOCUMENT_HASH}" "${MERCHANT_KYC_STATUS}" \
     --from "${MERCHANT_KEY}" \
     --fees 20000byx \
     --chain-id "${CHAIN_ID}" \
@@ -225,4 +226,3 @@ echo "${txq}" | jq -e '
 ' >/dev/null
 
 echo "OK: pay-with-certificate smoke passed"
-

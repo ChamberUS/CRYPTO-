@@ -92,5 +92,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMe
 	}
 	return bz
 }
-func (am AppModule) BeginBlock(context.Context) error { return nil }
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return am.keeper.AssertSupplyCap(sdkCtx)
+}
 func (am AppModule) EndBlock(context.Context) error   { return nil }

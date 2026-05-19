@@ -15,9 +15,10 @@ NEW_OWNER_KEY="${NEW_OWNER_KEY:-roberta}"
 
 MERCHANT_NAME="${MERCHANT_NAME:-IAOS Store}"
 MERCHANT_ADDR="${MERCHANT_ADDR:-Rua 1}"
-MERCHANT_DOC="${MERCHANT_DOC:-00000000000000}"
-MERCHANT_PHONE="${MERCHANT_PHONE:-0000000000}"
-MERCHANT_SALDO="${MERCHANT_SALDO:-0}"
+MERCHANT_OPERATOR="${MERCHANT_OPERATOR:-}"
+MERCHANT_KYC_REF="${MERCHANT_KYC_REF:-smoke-kyc-ref}"
+MERCHANT_DOCUMENT_HASH="${MERCHANT_DOCUMENT_HASH:-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}"
+MERCHANT_KYC_STATUS="${MERCHANT_KYC_STATUS:-approved}"
 
 CERT_CATEGORY="${CERT_CATEGORY:-NOTEBOOK}"
 CERT_BRAND="${CERT_BRAND:-Dell}"
@@ -73,7 +74,7 @@ ensure_merchant() {
   fi
 
   echo "merchant not found for creator; creating one..." >&2
-  tx_json="$(byxd tx lojas create-merchant "${MERCHANT_NAME}" "${MERCHANT_ADDR}" "${MERCHANT_DOC}" "${MERCHANT_PHONE}" "${MERCHANT_SALDO}" \
+  tx_json="$(byxd tx lojas create-merchant "${MERCHANT_NAME}" "${MERCHANT_ADDR}" "${MERCHANT_OPERATOR}" "${MERCHANT_KYC_REF}" "${MERCHANT_DOCUMENT_HASH}" "${MERCHANT_KYC_STATUS}" \
     --from "${ISSUER_KEY}" \
     --fees 20000byx \
     --chain-id "${CHAIN_ID}" \
@@ -204,4 +205,3 @@ cert_json2="$(curl -fsS "${REST}/byx/certificados/v1/certificates/${cert_id}")"
 echo "${cert_json2}" | jq -e --arg owner "${new_owner_addr}" '.certificate.owner == $owner' >/dev/null
 
 echo "OK: certificados smoke passed"
-

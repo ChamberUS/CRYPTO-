@@ -156,6 +156,9 @@ func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int)
 	if !amount.IsPositive() {
 		return fmt.Errorf("amount must be positive")
 	}
+	if err := k.AssertSupplyCap(ctx); err != nil {
+		return err
+	}
 
 	coin := sdk.NewCoin(types.DenomBYX, amount)
 	coins := sdk.NewCoins(coin)
@@ -174,5 +177,15 @@ func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int)
 		),
 	)
 
+	return nil
+}
+
+// AssertSupplyCap garante que o supply total de BYX não ultrapassa o cap.
+func (k Keeper) AssertSupplyCap(ctx sdk.Context) error {
+	supply := k.bankKeeper.GetSupply(ctx, types.DenomBYX).Amount
+	cap := math.NewInt(types.SupplyCapBYX)
+	if supply.GT(cap) {
+		return fmt.Errorf("byx supply cap exceeded: supply=%s cap=%s", supply.String(), cap.String())
+	}
 	return nil
 }

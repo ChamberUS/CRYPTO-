@@ -51,15 +51,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "CreateMerchant",
-					Use:            "create-merchant [nome] [endereco] [cpfcnpj] [telefone] [saldo]",
+					Use:            "create-merchant [nome] [endereco] [operator-address] [kyc-ref] [document-hash] [kyc-status]",
 					Short:          "Cria merchant",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "nome"}, {ProtoField: "endereco"}, {ProtoField: "cpfcnpj"}, {ProtoField: "telefone"}, {ProtoField: "saldo"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "nome"}, {ProtoField: "endereco"}, {ProtoField: "operator_address"}, {ProtoField: "kyc_ref"}, {ProtoField: "document_hash"}, {ProtoField: "kyc_status"}},
 				},
 				{
 					RpcMethod:      "UpdateMerchant",
-					Use:            "update-merchant [id] [nome] [endereco] [cpfcnpj] [telefone] [saldo]",
+					Use:            "update-merchant [id] [nome] [endereco] [operator-address] [kyc-ref] [document-hash] [kyc-status]",
 					Short:          "Atualiza merchant",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}, {ProtoField: "nome"}, {ProtoField: "endereco"}, {ProtoField: "cpfcnpj"}, {ProtoField: "telefone"}, {ProtoField: "saldo"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}, {ProtoField: "nome"}, {ProtoField: "endereco"}, {ProtoField: "operator_address"}, {ProtoField: "kyc_ref"}, {ProtoField: "document_hash"}, {ProtoField: "kyc_status"}},
 				},
 				{
 					RpcMethod:      "DeleteMerchant",

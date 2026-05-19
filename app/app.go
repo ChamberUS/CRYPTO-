@@ -166,7 +166,7 @@ type App struct {
 
 func init() {
 
-	sdk.DefaultBondDenom = "stake"
+	sdk.DefaultBondDenom = "byx"
 
 	var err error
 	clienthelpers.EnvPrefix = Name
