@@ -40,6 +40,16 @@ sudo ENV_FILE=$(pwd)/scripts/deploy/.env bash scripts/deploy/bootstrap.sh
 sudo ENV_FILE=$(pwd)/scripts/deploy/.env bash scripts/deploy/configure_node.sh
 ```
 
+Dry-run sem gravar:
+```bash
+sudo ENV_FILE=$(pwd)/scripts/deploy/.env DRY_RUN=true bash scripts/deploy/configure_node.sh
+```
+
+Validação explícita (TOML + genesis):
+```bash
+sudo ENV_FILE=$(pwd)/scripts/deploy/.env bash scripts/deploy/validate_node_config.sh
+```
+
 ## 4) Instalar systemd
 ```bash
 sudo ENV_FILE=$(pwd)/scripts/deploy/.env bash scripts/deploy/install_systemd.sh
@@ -65,4 +75,3 @@ Opcional: agendar via cron/systemd timer.
 - `1317/tcp`: manter privado (localhost/VPN).
 - `9090/tcp`: manter privado (localhost/VPN).
 - `26660/tcp`: métricas privadas.
-
