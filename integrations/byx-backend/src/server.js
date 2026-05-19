@@ -10,6 +10,7 @@ const config = {
   byxdHome: requiredEnv("BYXD_HOME"),
   keyringBackend: requiredEnv("KEYRING_BACKEND"),
   byxdBin: process.env.BYXD_BIN || "byxd",
+  allowProductionRun: process.env.BYX_BACKEND_ALLOW_PRODUCTION === "true",
   apiToken: process.env.BYX_BACKEND_API_TOKEN || "",
   allowUnauthenticated: process.env.BYX_ALLOW_UNAUTHENTICATED === "true",
   createPaymentKey: process.env.BYX_CREATE_PAYMENT_KEY || "",
@@ -26,6 +27,9 @@ for (const name of REQUIRED_ENV) {
   if (!process.env[name]) {
     throw new Error(`missing required env ${name}`);
   }
+}
+if (process.env.NODE_ENV === "production" && !config.allowProductionRun) {
+  throw new Error("refusing to run with NODE_ENV=production unless BYX_BACKEND_ALLOW_PRODUCTION=true");
 }
 
 const app = express();
@@ -51,8 +55,7 @@ app.use((req, _res, next) => {
     next(httpError(503, "BYX_BACKEND_API_TOKEN is required unless BYX_ALLOW_UNAUTHENTICATED=true"));
     return;
   }
-  const expected = `Bearer ${config.apiToken}`;
-  if (req.header("authorization") !== expected) {
+  if (!hasBearerAuth(req)) {
     next(httpError(401, "unauthorized"));
     return;
   }
@@ -141,6 +144,30 @@ app.get("/v1/devnet/payment-requests/:id/qr", asyncHandler(async (req) => {
   };
 }));
 
+app.get("/v1/devnet/game/petz/balance", asyncHandler(async (req) => {
+  const wallet = parseOptionalString(req.query?.wallet, "wallet", 128);
+  return {
+    environment: "DEVNET_TESTE_FECHADO",
+    feature: "game.petz.balance",
+    status: "placeholder",
+    wallet: wallet || null,
+    balances: [],
+    message: "Petz balance placeholder for closed devnet app testing.",
+  };
+}));
+
+app.post("/v1/devnet/game/petz/reward", requireBearerRoute, asyncHandler(async (req) => {
+  const wallet = parseOptionalString(req.body?.wallet, "wallet", 128);
+  const rewardId = parseOptionalString(req.body?.reward_id, "reward_id", 64);
+  logInfo("petz_reward_placeholder", {
+    request_id: req.requestId,
+    wallet: wallet || null,
+    reward_id: rewardId || null,
+    status: "blocked_placeholder",
+  });
+  throw httpError(501, "Petz reward is a DEVNET placeholder and is not enabled");
+}));
+
 app.post("/v1/devnet/payment-requests/:id/pay", asyncHandler(async (req) => {
   requireTxKey(config.devnetPayerKey, "BYX_DEVNET_PAYER_KEY");
   const id = parsePositiveUint(req.params.id, "id");
@@ -191,6 +218,7 @@ app.listen(config.port, () => {
     node: config.node,
     keyring_backend: config.keyringBackend,
     auth: config.allowUnauthenticated ? "disabled" : "bearer",
+    production_run: config.allowProductionRun,
   });
 });
 
@@ -327,6 +355,22 @@ function parseOptionalString(value, field, maxLength) {
     throw httpError(400, `${field} must be at most ${maxLength} chars`);
   }
   return trimmed;
+}
+
+function requireBearerRoute(req, _res, next) {
+  if (!config.apiToken) {
+    next(httpError(503, "BYX_BACKEND_API_TOKEN is required for this endpoint"));
+    return;
+  }
+  if (!hasBearerAuth(req)) {
+    next(httpError(401, "unauthorized"));
+    return;
+  }
+  next();
+}
+
+function hasBearerAuth(req) {
+  return req.header("authorization") === `Bearer ${config.apiToken}`;
 }
 
 function requireTxKey(value, envName) {
