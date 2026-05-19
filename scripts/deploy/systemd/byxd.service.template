@@ -1,0 +1,20 @@
+[Unit]
+Description=BYX Daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{BYX_USER}}
+Group={{BYX_GROUP}}
+EnvironmentFile={{BYX_ENV_FILE}}
+ExecStart={{BYXD_BIN}} start --home {{BYX_HOME}} --minimum-gas-prices {{BYX_MIN_GAS_PRICES}} --log_level {{BYX_LOG_LEVEL}}
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+TimeoutStopSec=120
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
+
