@@ -1,0 +1,52 @@
+{
+  "app_state": {
+    "bank": {
+      "balances": [
+        {
+          "address": "buynnex_genesis_wallet_address",
+          "coins": [
+            {
+              "denom": "byx",
+              "amount": "1000000000"
+            }
+          ]
+        }
+      ],
+      "supply": [
+        {
+          "denom": "byx",
+          "amount": "1000000000"
+        }
+      ]
+    },
+    "staking": {
+      "params": {
+        "bond_denom": "byx"
+      }
+    },
+    "denom_metadata": [
+      {
+        "description": "Token oficial da rede Buynnex",
+        "denom_units": [
+          {
+            "denom": "byx",
+            "exponent": 0
+          },
+          {
+            "denom": "BYX",
+            "exponent": 6
+          }
+        ],
+        "base": "byx",
+        "display": "BYX",
+        "name": "Buynnex Token",
+        "symbol": "BYX"
+      }
+    ]
+  },
+  "chain_id": "byx-testnet-1"
+
+
+
+  
+}

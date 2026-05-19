@@ -1,0 +1,395 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "byx/certificados/v1/tx.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Msg"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/byx.certificados.v1.Msg/UpdateParams": {
+      "post": {
+        "operationId": "Msg_UpdateParams",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.certificados.v1.MsgUpdateParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "MsgUpdateParams is the Msg/UpdateParams request type.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.certificados.v1.MsgUpdateParams"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx/certificados/v1/certificates": {
+      "post": {
+        "summary": "Emite um certificado vinculado a um merchant_id.",
+        "operationId": "Msg_IssueCertificate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.certificados.v1.MsgIssueCertificateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "MsgIssueCertificate cria um certificado.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.certificados.v1.MsgIssueCertificate"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx/certificados/v1/certificates/{certificate_id}/revoke": {
+      "post": {
+        "summary": "Revoga um certificado (apenas emissor/merchant owner).",
+        "operationId": "Msg_RevokeCertificate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.certificados.v1.MsgRevokeCertificateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "certificate_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "creator": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "description": "MsgRevokeCertificate revoga um certificado."
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx/certificados/v1/certificates/{certificate_id}/service": {
+      "post": {
+        "summary": "Adiciona um registro de serviço/manutenção.",
+        "operationId": "Msg_AddServiceRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.certificados.v1.MsgAddServiceRecordResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "certificate_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "creator": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "description": "MsgAddServiceRecord adiciona um registro de manutenção/upgrade."
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx/certificados/v1/certificates/{certificate_id}/transfer": {
+      "post": {
+        "summary": "Transfere propriedade de um certificado.",
+        "operationId": "Msg_TransferCertificate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.certificados.v1.MsgTransferCertificateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "certificate_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "creator": {
+                  "type": "string"
+                },
+                "new_owner": {
+                  "type": "string"
+                }
+              },
+              "description": "MsgTransferCertificate transfere a propriedade."
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "byx.certificados.v1.MsgAddServiceRecordResponse": {
+      "type": "object",
+      "properties": {
+        "record": {
+          "$ref": "#/definitions/byx.certificados.v1.ServiceRecord"
+        }
+      }
+    },
+    "byx.certificados.v1.MsgIssueCertificate": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "merchant_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "brand": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "serial_hash": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "image_uri": {
+          "type": "string"
+        },
+        "image_sha256": {
+          "type": "string"
+        },
+        "image_seed": {
+          "type": "string"
+        }
+      },
+      "description": "MsgIssueCertificate cria um certificado."
+    },
+    "byx.certificados.v1.MsgIssueCertificateResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "byx.certificados.v1.MsgRevokeCertificateResponse": {
+      "type": "object"
+    },
+    "byx.certificados.v1.MsgTransferCertificateResponse": {
+      "type": "object"
+    },
+    "byx.certificados.v1.MsgUpdateParams": {
+      "type": "object",
+      "properties": {
+        "authority": {
+          "type": "string",
+          "description": "authority is the address that controls the module (defaults to x/gov unless overwritten)."
+        },
+        "params": {
+          "$ref": "#/definitions/byx.certificados.v1.Params",
+          "description": "params defines the module parameters to update.\n\nNOTE: All parameters must be supplied."
+        }
+      },
+      "description": "MsgUpdateParams is the Msg/UpdateParams request type."
+    },
+    "byx.certificados.v1.MsgUpdateParamsResponse": {
+      "type": "object",
+      "description": "MsgUpdateParamsResponse defines the response structure for executing a\nMsgUpdateParams message."
+    },
+    "byx.certificados.v1.Params": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "enabled permite ligar/desligar o módulo."
+        },
+        "issue_fee_byx": {
+          "type": "string",
+          "format": "uint64",
+          "description": "issue_fee_byx define a taxa fixa de emissão em microBYX."
+        },
+        "allow_transfer": {
+          "type": "boolean",
+          "description": "allow_transfer permite transferências entre owners quando true."
+        }
+      },
+      "description": "Params defines the parameters for the certificados module."
+    },
+    "byx.certificados.v1.ServiceRecord": {
+      "type": "object",
+      "properties": {
+        "certificate_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "index": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "added_by": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string"
+        }
+      },
+      "description": "ServiceRecord registra uma manutenção/upgrade vinculada a um certificado."
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "google.rpc.Status": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}

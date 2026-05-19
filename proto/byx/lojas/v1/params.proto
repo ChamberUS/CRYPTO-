@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package byx.lojas.v1;
+
+option go_package = "byx/x/lojas/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+// Parâmetros do módulo lojas
+message Params {
+  // Endereço bech32 que pode chamar o faucet (opcional)
+  string faucet_admin      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // Liga/desliga o faucet no módulo
+  bool   faucet_enabled    = 2;
+
+  // Limite por transação do faucet (Int em string, ex "1000")
+  string faucet_max_per_tx = 3;
+
+  // Cashback em micro BYX por real gasto (ex.: 2500 = 0.0025 BYX/R$1)
+  uint64 cashback_rate_micro_byx_per_real = 4;
+
+  // Limite máximo de valor de venda em centavos (anti-abuso)
+  uint64 max_valor_venda_em_centavos = 5;
+
+  // Limite máximo de cashback por venda em micro BYX
+  uint64 max_cashback_micro_byx_por_venda = 6;
+
+  // Limite diário de cashback por loja (micro BYX)
+  uint64 max_cashback_daily_per_loja_microbyx = 7;
+
+  // Limite de vendas por bloco por loja
+  uint32 max_sales_per_block_per_loja = 8;
+
+  // Habilita/desabilita verificações de limite
+  bool limits_enabled = 9;
+
+  // Quantos dias manter acumulador diário antes de limpar (MVP simples)
+  uint32 cashback_daily_retention_days = 10;
+}

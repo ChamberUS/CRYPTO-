@@ -1,0 +1,20 @@
+syntax = "proto3";
+package byx.payments.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "byx/x/payments/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "byx/x/payments/Params";
+  option (gogoproto.equal) = true;
+
+  // default expiration in seconds when the client does not set one.
+  uint64 default_expires_in_seconds = 1;
+  // minimum allowed expiration window for a payment request.
+  uint64 min_expires_in_seconds = 2;
+  // maximum allowed expiration window for a payment request.
+  uint64 max_expires_in_seconds = 3;
+}

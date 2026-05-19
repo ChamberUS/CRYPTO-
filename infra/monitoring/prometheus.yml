@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Métricas do CometBFT/Tendermint (ajuste via COMET_METRICS_TARGET)
+  - job_name: cometbft
+    static_configs:
+      - targets:
+          - "${COMET_METRICS_TARGET:-host.docker.internal:26660}"
+
+  # Métricas do app (telemetry) — ajuste APP_METRICS_TARGET se exposto em outra porta
+  - job_name: app
+    static_configs:
+      - targets:
+          - "${APP_METRICS_TARGET:-host.docker.internal:26660}"

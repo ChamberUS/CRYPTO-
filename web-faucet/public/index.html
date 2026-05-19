@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>BYX • Faucet & Saldo (DEV)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;margin:24px;line-height:1.35}
+    .card{border:1px solid #eee;border-radius:12px;padding:16px;margin:16px 0}
+    label{display:block;margin:8px 0 4px}
+    input,button{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc}
+    button{background:#111;color:#fff;border:0;cursor:pointer;margin-top:10px}
+    pre{background:#111;color:#0f0;padding:12px;border-radius:10px;overflow:auto}
+    a{color:#06f}
+  </style>
+</head>
+<body>
+  <a href="web_index.html">Ir para página Web Index</a>
+  <h1>BYX • Faucet & Saldo (DEV)</h1>
+  <p class="muted">Conectado ao seu nó local. Esta interface usa o <code>byxd</code> via backend para assinar e enviar transações.</p>
+
+  <div class="card">
+    <h3>Faucet (creditar BYX)</h3>
+    <label>ID do lojista</label>
+    <input id="fzId" value="1">
+    <label>Quantidade (BYX)</label>
+    <input id="fzAmt" value="4">
+    <label>Assinante (opcional)</label>
+    <input id="fzSigner" placeholder="nome da chave (ex: marcelo). Vazio usa ADMIN_KEY do .env">
+    <button id="btnFaucet">Creditar</button>
+    <pre id="outFaucet"></pre>
+  </div>
+
+  <div class="card">
+    <h3>Consultar Merchant</h3>
+    <label>ID</label>
+    <input id="qId" value="1">
+    <button id="btnQuery">Consultar</button>
+    <pre id="outQuery"></pre>
+  </div>
+
+  <div class="card">
+    <h3>Transferir BYX entre lojistas</h3>
+    <label>De (ID)</label>
+    <input id="trFrom" value="0">
+    <label>Para (ID)</label>
+    <input id="trTo" value="1">
+    <label>Valor</label>
+    <input id="trVal" value="2">
+    <label>Assinante (opcional)</label>
+    <input id="trSigner" placeholder="nome da chave (ex: marcelo). Vazio usa ADMIN_KEY do .env">
+    <button id="btnTransfer">Transferir</button>
+    <pre id="outTransfer"></pre>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const j = (x) => JSON.stringify(x, null, 2);
+
+async function faucet() {
+  const id = $('fzId').value.trim();
+  const amount = $('fzAmt').value.trim();
+  const assinante = $('fzSigner').value.trim() || undefined;
+
+  $('outFaucet').textContent = '...';
+  const r = await fetch('/api/faucet', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ id, amount, assinante })
+  });
+  $('outFaucet').textContent = j(await r.json());
+}
+
+async function queryMerchant() {
+  const id = $('qId').value.trim();
+  $('outQuery').textContent = '...';
+  const r = await fetch('/api/merchant/' + encodeURIComponent(id));
+  $('outQuery').textContent = j(await r.json());
+}
+
+async function transferir() {
+  const fromId = $('trFrom').value.trim();
+  const toId   = $('trTo').value.trim();
+  const valor  = $('trVal').value.trim();
+  const assinante = $('trSigner').value.trim() || undefined;
+
+  $('outTransfer').textContent = '...';
+  const r = await fetch('/api/transfer', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ fromId, toId, valor, assinante })
+  });
+  $('outTransfer').textContent = j(await r.json());
+}
+
+// binds
+$('btnFaucet').onclick   = faucet;
+$('btnQuery').onclick    = queryMerchant; // <-- agora está correto
+$('btnTransfer').onclick = transferir;
+
+// compat com HTML antigo (se algum JS externo chamar)
+window.getMerchant = queryMerchant;
+</script>
+</body>
+</html>

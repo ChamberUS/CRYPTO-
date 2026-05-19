@@ -1,0 +1,81 @@
+syntax = "proto3";
+package byx.certificados.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "byx/certificados/v1/params.proto";
+import "byx/certificados/v1/certificate.proto";
+
+option go_package = "byx/x/certificados/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Certificate retorna um certificado pelo id.
+  rpc Certificate(QueryGetCertificateRequest) returns (QueryGetCertificateResponse) {
+    option (google.api.http).get = "/byx/certificados/v1/certificates/{id}";
+  }
+
+  // CertificatesByOwner retorna certificados por owner.
+  rpc CertificatesByOwner(QueryCertificatesByOwnerRequest) returns (QueryCertificatesByOwnerResponse) {
+    option (google.api.http).get = "/byx/certificados/v1/owners/{owner}/certificates";
+  }
+
+  // CertificatesByMerchant retorna certificados por merchant.
+  rpc CertificatesByMerchant(QueryCertificatesByMerchantRequest) returns (QueryCertificatesByMerchantResponse) {
+    option (google.api.http).get = "/byx/certificados/v1/merchants/{merchant_id}/certificates";
+  }
+
+  // CertificatesBySerial retorna certificados associados a um serial_hash.
+  rpc CertificatesBySerial(QueryCertificatesBySerialRequest) returns (QueryCertificatesBySerialResponse) {
+    option (google.api.http).get = "/byx/certificados/v1/serial/{serial_hash}/certificates";
+  }
+
+  // Params retorna parâmetros do módulo.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/byx/certificados/v1/params";
+  }
+}
+
+message QueryGetCertificateRequest {
+  uint64 id = 1;
+}
+
+message QueryGetCertificateResponse {
+  Certificate certificate = 1;
+}
+
+message QueryCertificatesByOwnerRequest {
+  string owner = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryCertificatesByOwnerResponse {
+  repeated Certificate certificates = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryCertificatesByMerchantRequest {
+  uint64 merchant_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryCertificatesByMerchantResponse {
+  repeated Certificate certificates = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryCertificatesBySerialRequest {
+  string serial_hash = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryCertificatesBySerialResponse {
+  repeated Certificate certificates = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1;
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package byx.lojas.v1;
+
+option go_package = "byx/x/lojas/types";
+
+// Lojista defines the Lojista message.
+message Lojista {
+  string nome = 1;
+  string endereco = 2;
+  string cpfcnpj = 3;
+  string telefone = 4;
+  string saldo = 5;
+}

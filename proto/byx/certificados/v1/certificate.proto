@@ -1,0 +1,36 @@
+syntax = "proto3";
+package byx.certificados.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "byx/x/certificados/types";
+
+// Certificate representa um ativo NFT-like de certificado digital de proveniência.
+message Certificate {
+  uint64 id = 1;
+  uint64 merchant_id = 2;
+  string issuer = 3;       // endereço bech32 do emissor (merchant owner)
+  string owner = 4;        // proprietário atual
+  string category = 5;     // NOTEBOOK, MOUSE, KEYBOARD, HEADSET, MONITOR, GPU, OTHER
+  string brand = 6;
+  string model = 7;
+  string serial_hash = 8;  // sha256(serial_number_normalized)
+  string condition = 9;    // A+, A, B, C + notas
+  string notes = 10;       // opcional
+  string image_uri = 11;   // file://..., ipfs://..., https://...
+  string image_sha256 = 12;
+  string image_seed = 13;
+  bool revoked = 14;
+  string revoked_reason = 15;
+  string created_at = 16; // RFC3339 UTC
+}
+
+// ServiceRecord registra uma manutenção/upgrade vinculada a um certificado.
+message ServiceRecord {
+  uint64 certificate_id = 1;
+  uint64 index = 2;
+  string added_by = 3; // endereço que registrou
+  string kind = 4;     // REPAIR, UPGRADE, BATTERY, SCREEN, CLEANING, OTHER
+  string details = 5;
+  string at = 6;       // RFC3339 UTC
+}

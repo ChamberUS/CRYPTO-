@@ -1,0 +1,28 @@
+syntax = "proto3";
+package byx.lojas.v1;
+
+option go_package = "byx/x/lojas/types";
+
+message Sale {
+  uint64 id = 1;
+  uint64 loja_id = 2;
+  string creator = 3;
+  uint64 valor_em_centavos = 4;
+  string cliente = 5;
+  uint64 cashback_micro_byx = 6;
+  string timestamp = 7; // RFC3339
+  uint64 block_time = 8; // unix seconds (compat: optional)
+}
+
+message SalesCountState {
+  int64 last_height = 1;
+  uint32 count = 2;
+}
+
+message SalesSummary {
+  uint64 loja_id = 1;
+  uint64 total_vendas = 2;
+  uint64 total_valor_em_centavos = 3;
+  uint64 total_cashback_micro_byx = 4;
+  uint64 ticket_medio_em_centavos = 5;
+}

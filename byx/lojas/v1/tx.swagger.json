@@ -1,0 +1,543 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "byx/lojas/v1/tx.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Msg"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/byx.lojas.v1.Msg/CreateLojista": {
+      "post": {
+        "summary": "Seus RPCs existentes",
+        "operationId": "Msg_CreateLojista",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgCreateLojistaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgCreateLojista"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx.lojas.v1.Msg/CreateMerchant": {
+      "post": {
+        "operationId": "Msg_CreateMerchant",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgCreateMerchantResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgCreateMerchant"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx.lojas.v1.Msg/DeleteMerchant": {
+      "post": {
+        "operationId": "Msg_DeleteMerchant",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgDeleteMerchantResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgDeleteMerchant"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx.lojas.v1.Msg/RegistrarVenda": {
+      "post": {
+        "operationId": "Msg_RegistrarVenda",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgRegistrarVendaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgRegistrarVenda"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx.lojas.v1.Msg/TransferirByx": {
+      "post": {
+        "operationId": "Msg_TransferirByx",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgTransferirByxResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgTransferirByx"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx.lojas.v1.Msg/UpdateMerchant": {
+      "post": {
+        "operationId": "Msg_UpdateMerchant",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgUpdateMerchantResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgUpdateMerchant"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx.lojas.v1.Msg/UpdateParams": {
+      "post": {
+        "summary": "Params (exigido porque o módulo tem x/params)",
+        "operationId": "Msg_UpdateParams",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgUpdateParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgUpdateParams"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx/lojas/faucet": {
+      "post": {
+        "summary": "Faucet (com rota REST)",
+        "operationId": "Msg_Faucet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgFaucetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.MsgFaucet"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "byx.lojas.v1.MsgCreateLojista": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "nome": {
+          "type": "string"
+        },
+        "endereco": {
+          "type": "string"
+        },
+        "cpfcnpj": {
+          "type": "string"
+        },
+        "telefone": {
+          "type": "string"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgCreateLojistaResponse": {
+      "type": "object"
+    },
+    "byx.lojas.v1.MsgCreateMerchant": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "nome": {
+          "type": "string"
+        },
+        "endereco": {
+          "type": "string"
+        },
+        "cpfcnpj": {
+          "type": "string"
+        },
+        "telefone": {
+          "type": "string"
+        },
+        "saldo": {
+          "type": "string"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgCreateMerchantResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgDeleteMerchant": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgDeleteMerchantResponse": {
+      "type": "object"
+    },
+    "byx.lojas.v1.MsgFaucet": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "lojista_id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgFaucetResponse": {
+      "type": "object"
+    },
+    "byx.lojas.v1.MsgRegistrarVenda": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string",
+          "title": "Endereço que assina a transação (dono/operador da loja)"
+        },
+        "loja_id": {
+          "type": "string",
+          "title": "ID da loja/merchant que está registrando a venda (segue o padrão string do módulo)"
+        },
+        "valor_em_centavos": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Valor da venda em centavos de real (ex.: 1500 = R$15,00)"
+        },
+        "cliente": {
+          "type": "string",
+          "title": "Endereço do cliente que vai receber o cashback (pode ser vazio)"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgRegistrarVendaResponse": {
+      "type": "object",
+      "properties": {
+        "cashback_micro_byx": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Cashback efetivamente creditado em micro BYX (inteiro positivo ou zero)"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgTransferirByx": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "de_lojista_id": {
+          "type": "string"
+        },
+        "para_lojista_id": {
+          "type": "string"
+        },
+        "valor": {
+          "type": "string"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgTransferirByxResponse": {
+      "type": "object"
+    },
+    "byx.lojas.v1.MsgUpdateMerchant": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nome": {
+          "type": "string"
+        },
+        "endereco": {
+          "type": "string"
+        },
+        "cpfcnpj": {
+          "type": "string"
+        },
+        "telefone": {
+          "type": "string"
+        },
+        "saldo": {
+          "type": "string"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgUpdateMerchantResponse": {
+      "type": "object"
+    },
+    "byx.lojas.v1.MsgUpdateParams": {
+      "type": "object",
+      "properties": {
+        "authority": {
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/byx.lojas.v1.Params"
+        }
+      }
+    },
+    "byx.lojas.v1.MsgUpdateParamsResponse": {
+      "type": "object"
+    },
+    "byx.lojas.v1.Params": {
+      "type": "object",
+      "properties": {
+        "faucet_admin": {
+          "type": "string",
+          "title": "Endereço bech32 que pode chamar o faucet (opcional)"
+        },
+        "faucet_enabled": {
+          "type": "boolean",
+          "title": "Liga/desliga o faucet no módulo"
+        },
+        "faucet_max_per_tx": {
+          "type": "string",
+          "title": "Limite por transação do faucet (Int em string, ex \"1000\")"
+        },
+        "cashback_rate_micro_byx_per_real": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Cashback em micro BYX por real gasto (ex.: 2500 = 0.0025 BYX/R$1)"
+        },
+        "max_valor_venda_em_centavos": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Limite máximo de valor de venda em centavos (anti-abuso)"
+        },
+        "max_cashback_micro_byx_por_venda": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Limite máximo de cashback por venda em micro BYX"
+        },
+        "max_cashback_daily_per_loja_microbyx": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Limite diário de cashback por loja (micro BYX)"
+        },
+        "max_sales_per_block_per_loja": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Limite de vendas por bloco por loja"
+        },
+        "limits_enabled": {
+          "type": "boolean",
+          "title": "Habilita/desabilita verificações de limite"
+        },
+        "cashback_daily_retention_days": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Quantos dias manter acumulador diário antes de limpar (MVP simples)"
+        }
+      },
+      "title": "Parâmetros do módulo lojas"
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "google.rpc.Status": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}

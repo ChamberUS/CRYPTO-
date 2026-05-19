@@ -1,0 +1,25 @@
+syntax = "proto3";
+package byx.certificados.v1;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "byx/x/certificados/types";
+
+// Params defines the parameters for the certificados module.
+message Params {
+  option (amino.name) = "byx/x/certificados/Params";
+
+  // enabled permite ligar/desligar o módulo.
+  bool enabled = 1 [(gogoproto.moretags) = "yaml:\"enabled\""];
+
+  // issue_fee_byx define a taxa fixa de emissão em microBYX.
+  uint64 issue_fee_byx = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.moretags) = "yaml:\"issue_fee_byx\""
+  ];
+
+  // allow_transfer permite transferências entre owners quando true.
+  bool allow_transfer = 3 [(gogoproto.moretags) = "yaml:\"allow_transfer\""];
+}

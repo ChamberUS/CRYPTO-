@@ -1,0 +1,293 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "byx/payments/v1/tx.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Msg"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/byx.payments.v1.Msg/UpdateParams": {
+      "post": {
+        "operationId": "Msg_UpdateParams",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.payments.v1.MsgUpdateParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "MsgUpdateParams is the Msg/UpdateParams request type.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.payments.v1.MsgUpdateParams"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx/payments/v1/payment_requests": {
+      "post": {
+        "summary": "Cria um novo pedido de pagamento para a loja informada.",
+        "operationId": "Msg_CreatePaymentRequest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.payments.v1.MsgCreatePaymentRequestResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "MsgCreatePaymentRequest cria um pedido de pagamento para uma loja.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/byx.payments.v1.MsgCreatePaymentRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    },
+    "/byx/payments/v1/payment_requests/{request_id}/pay": {
+      "post": {
+        "summary": "Paga um pedido pendente.",
+        "operationId": "Msg_PayPaymentRequest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.payments.v1.MsgPayPaymentRequestResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "creator": {
+                  "type": "string"
+                }
+              },
+              "description": "MsgPayPaymentRequest permite um pagador liquidar um pedido pendente."
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "byx.payments.v1.MsgCreatePaymentRequest": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "loja_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "amount_microbyx": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "memo": {
+          "type": "string"
+        },
+        "expires_in_seconds": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "description": "MsgCreatePaymentRequest cria um pedido de pagamento para uma loja."
+    },
+    "byx.payments.v1.MsgCreatePaymentRequestResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "byx.payments.v1.MsgPayPaymentRequestResponse": {
+      "type": "object",
+      "properties": {
+        "payment_request": {
+          "$ref": "#/definitions/byx.payments.v1.PaymentRequest"
+        }
+      }
+    },
+    "byx.payments.v1.MsgUpdateParams": {
+      "type": "object",
+      "properties": {
+        "authority": {
+          "type": "string",
+          "description": "authority is the address that controls the module (defaults to x/gov unless overwritten)."
+        },
+        "params": {
+          "$ref": "#/definitions/byx.payments.v1.Params",
+          "description": "params defines the module parameters to update.\n\nNOTE: All parameters must be supplied."
+        }
+      },
+      "description": "MsgUpdateParams is the Msg/UpdateParams request type."
+    },
+    "byx.payments.v1.MsgUpdateParamsResponse": {
+      "type": "object",
+      "description": "MsgUpdateParamsResponse defines the response structure for executing a\nMsgUpdateParams message."
+    },
+    "byx.payments.v1.Params": {
+      "type": "object",
+      "properties": {
+        "default_expires_in_seconds": {
+          "type": "string",
+          "format": "uint64",
+          "description": "default expiration in seconds when the client does not set one."
+        },
+        "min_expires_in_seconds": {
+          "type": "string",
+          "format": "uint64",
+          "description": "minimum allowed expiration window for a payment request."
+        },
+        "max_expires_in_seconds": {
+          "type": "string",
+          "format": "uint64",
+          "description": "maximum allowed expiration window for a payment request."
+        }
+      },
+      "description": "Params defines the parameters for the module."
+    },
+    "byx.payments.v1.PaymentRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "loja_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "amount_microbyx": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "memo": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/byx.payments.v1.PaymentStatus"
+        },
+        "created_at_unix": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "expires_at_unix": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "payer": {
+          "type": "string"
+        },
+        "paid_at_unix": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "description": "PaymentRequest representa um pedido de pagamento criado por uma loja."
+    },
+    "byx.payments.v1.PaymentStatus": {
+      "type": "string",
+      "enum": [
+        "PAYMENT_STATUS_UNSPECIFIED",
+        "PAYMENT_STATUS_PENDING",
+        "PAYMENT_STATUS_PAID",
+        "PAYMENT_STATUS_EXPIRED",
+        "PAYMENT_STATUS_CANCELED"
+      ],
+      "default": "PAYMENT_STATUS_UNSPECIFIED",
+      "description": "PaymentStatus indica o estado do pedido de pagamento."
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "google.rpc.Status": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}

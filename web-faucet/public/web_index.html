@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>BYX • CosmJS + Keplr (DEV)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;margin:24px;line-height:1.35}
+    fieldset{border:1px solid #ddd;border-radius:10px;padding:16px;margin:18px 0}
+    legend{font-weight:700}
+    label{display:block;margin:6px 0 2px}
+    input{width:100%;padding:8px;border:1px solid #ccc;border-radius:8px}
+    button{margin-top:10px;padding:10px 14px;border:0;border-radius:10px;background:#111;color:#fff;cursor:pointer}
+    button.secondary{background:#555}
+    pre{background:#111;color:#0f0;padding:14px;border-radius:10px;overflow:auto}
+    small,.muted{color:#666}
+    .warn{color:#b00}
+  </style>
+</head>
+<body>
+  <a href="index.html">Voltar para página inicial</a>
+  <h2>BYX • CosmJS + Keplr (DEV)</h2>
+  <p class="muted">Assinando e enviando transações direto do navegador.</p>
+
+  <fieldset>
+    <legend>1) Conectar Keplr</legend>
+    <label>RPC URL</label>
+    <input id="rpc"  value="http://localhost:26657" />
+    <label>REST/LCD (opcional)</label>
+    <input id="rest" value="http://localhost:1317" />
+    <label>Chain ID</label>
+    <input id="chainId" value="byx" />
+    <button id="btnConnect">Conectar Keplr</button>
+    <button id="btnAcc" class="secondary">Minha conta</button>
+    <pre id="outConnect"></pre>
+    <pre id="minha-conta"></pre>
+    <small id="lcdHint" class="warn"></small>
+  </fieldset>
+
+  <fieldset>
+    <legend>2) Consultar Merchant</legend>
+    <label>ID</label>
+    <input id="qId" value="1" />
+    <button id="btnQuery">Consultar</button>
+    <pre id="outQuery"></pre>
+  </fieldset>
+
+  <fieldset>
+    <legend>3) Faucet (creditar BYX)</legend>
+    <label>ID do lojista</label>
+    <input id="fzId" value="1" />
+    <label>Quantidade (BYX)</label>
+    <input id="fzAmt" value="200" />
+    <button id="btnFaucet">Creditar</button>
+    <pre id="outFaucet"></pre>
+  </fieldset>
+
+  <fieldset>
+    <legend>4) Transferir BYX entre lojistas</legend>
+    <label>De (ID)</label>
+    <input id="trFrom" value="0" />
+    <label>Para (ID)</label>
+    <input id="trTo" value="1" />
+    <label>Valor (BYX)</label>
+    <input id="trVal" value="5" />
+    <button id="btnTransfer">Transferir</button>
+    <pre id="outTransfer"></pre>
+  </fieldset>
+
+<script type="module">
+  import {
+    SigningStargateClient,
+    StargateClient,
+    AminoTypes,
+    GasPrice,
+    coins,
+  } from "/vendor/cosmjs-bundle.js";
+
+  const toHex = (u8) => [...new Uint8Array(u8)].map(b => b.toString(16).padStart(2,'0')).join('');
+  const log = (id, obj) => document.getElementById(id).textContent = JSON.stringify(obj, null, 2);
+
+  // Mapeamento Amino das mensagens do seu módulo
+  const amino = new AminoTypes({
+    "/byx.lojas.v1.MsgFaucet": {
+      aminoType:"byx/MsgFaucet",
+      toAmino:   ({ creator, lojistaId, amount }) => ({ creator, lojista_id: lojistaId, amount }),
+      fromAmino: ({ creator, lojista_id, amount }) => ({ creator, lojistaId: lojista_id, amount }),
+    },
+    "/byx.lojas.v1.MsgTransferirByx": {
+      aminoType:"byx/MsgTransferirByx",
+      toAmino:   ({ creator, deLojistaId, paraLojistaId, valor }) =>
+                 ({ creator, de_lojista_id: deLojistaId, para_lojista_id: paraLojistaId, valor }),
+      fromAmino: ({ creator, de_lojista_id, para_lojista_id, valor }) =>
+                 ({ creator, deLojistaId: de_lojista_id, paraLojistaId: para_lojista_id, valor }),
+    },
+  });
+
+  async function connect() {
+    try {
+      const rpc   = document.getElementById("rpc").value.trim();
+      const rest  = document.getElementById("rest").value.trim();
+      const chain = (document.getElementById("chainId").value.trim() || "byx");
+
+      if (!window.keplr) throw new Error("Keplr não encontrado no navegador.");
+
+      // sugere + habilita a rede
+      try { await window.keplr.enable(chain); } catch {}
+      if (window.keplr.experimentalSuggestChain) {
+        await window.keplr.experimentalSuggestChain({
+          chainId: chain, chainName: "BYX Local", rpc, rest,
+          bip44: { coinType: 118 },
+          bech32Config: {
+            bech32PrefixAccAddr: "byx",
+            bech32PrefixAccPub:  "byxpub",
+            bech32PrefixValAddr: "byxvaloper",
+            bech32PrefixValPub:  "byxvaloperpub",
+            bech32PrefixConsAddr:"byxvalcons",
+            bech32PrefixConsPub: "byxvalconspub",
+          },
+          currencies:    [{ coinDenom:"BYX", coinMinimalDenom:"byx", coinDecimals:0 }],
+          feeCurrencies: [{ coinDenom:"BYX", coinMinimalDenom:"byx", coinDecimals:0, gasPriceStep:{ low:0, average:0, high:0 } }],
+          stakeCurrency: { coinDenom:"BYX", coinMinimalDenom:"byx", coinDecimals:0 },
+          features: ["stargate","no-legacy-stdTx"],
+        });
+        await window.keplr.enable(chain);
+      }
+
+      // pega o signer direto da extensão
+      const signer = await window.getOfflineSignerAuto(chain);
+      const [acc] = await signer.getAccounts();
+      const addr = acc?.address;
+
+      const gasPrice = GasPrice.fromString("0byx");
+      const client   = await SigningStargateClient.connectWithSigner(rpc, signer, { prefix:"byx", aminoTypes:amino, gasPrice });
+      const stargate = await StargateClient.connect(rpc);
+
+      log("outConnect", { ok:true, address: addr, chainId: await stargate.getChainId() });
+      window.__byx = { client, stargate, addr, coins };
+    } catch (e) {
+      log("outConnect", { ok:false, error: String(e?.message || e) });
+    }
+  }
+
+  async function connectKeplr() {
+    try {
+      const chain = document.querySelector('#chainId')?.value || "byx";
+      await window.keplr.enable(chain);
+      const key = await window.keplr.getKey(chain);
+
+      const info = {
+        name: key.name,
+        bech32Address: key.bech32Address,
+        algo: key.algo,
+        pubKeyHex: toHex(key.pubKey), // <-- sem Buffer
+      };
+
+      const mc = document.getElementById("minha-conta");
+      if (mc) mc.textContent = JSON.stringify(info, null, 2);
+    } catch (e) {
+      log("outConnect", { ok:false, error: String(e?.message || e) });
+    }
+  }
+
+  async function queryMerchant() {
+    const id = document.getElementById("qId").value.trim();
+    try {
+      const rest = document.getElementById("rest").value.trim();
+      const url  = `${rest.replace(/\/+$/,"")}/byx/lojas/v1/merchant/${id}`;
+      const js   = await (await fetch(url)).json();
+      log("outQuery", js);
+    } catch (e) {
+      log("outQuery", { error:String(e) });
+    }
+  }
+
+  async function transferByx() {
+    try {
+      const s = window.__byx;
+      if (!s) throw new Error("Conecte o Keplr primeiro");
+
+      const fromId = parseInt(document.getElementById("trFrom").value, 10);
+      const toId   = parseInt(document.getElementById("trTo").value, 10);
+      const valor  = document.getElementById("trVal").value.trim();
+
+      const msg = {
+        typeUrl: "/byx.lojas.v1.MsgTransferirByx",
+        value: {
+          creator: s.addr,
+          deLojistaId: fromId,
+          paraLojistaId: toId,
+          valor: valor,
+        },
+      };
+
+      const res = await s.client.signAndBroadcast(s.addr, [msg], { amount: [], gas: "200000" });
+      log("outTransfer", { ok: res.code === 0, txhash: res.transactionHash, raw: res });
+    } catch (e) {
+      log("outTransfer", { ok:false, error:String(e?.message || e) });
+    }
+  }
+
+  // binds
+  document.getElementById("btnConnect").onclick  = connect;
+  document.getElementById("btnAcc").onclick      = connectKeplr;
+  document.getElementById("btnQuery").onclick    = queryMerchant;
+  document.getElementById("btnTransfer").onclick = transferByx;
+
+  // compat com HTML antigo
+  window.getMerchant = queryMerchant;
+  window.transferByx = transferByx;
+</script>
+</body>
+</html>

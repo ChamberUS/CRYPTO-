@@ -1,0 +1,79 @@
+syntax = "proto3";
+package byx.payments.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "byx/payments/v1/params.proto";
+import "byx/payments/v1/payment.proto";
+
+option go_package = "byx/x/payments/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/byx/payments/v1/params";
+  }
+
+  // Retorna um pedido específico.
+  rpc PaymentRequest(QueryGetPaymentRequestRequest) returns (QueryGetPaymentRequestResponse) {
+    option (google.api.http).get = "/byx/payments/v1/payment_requests/{id}";
+  }
+
+  // Lista pedidos de uma loja (mais recentes primeiro).
+  rpc PaymentRequestsByLoja(QueryPaymentRequestsByLojaRequest) returns (QueryPaymentRequestsByLojaResponse) {
+    option (google.api.http).get = "/byx/payments/v1/payment_requests/by_loja/{loja_id}";
+  }
+
+  // Retorna um payload JSON compacto para QR (sem frontend).
+  rpc PaymentsQRCode(QueryPaymentsQRCodeRequest) returns (QueryPaymentsQRCodeResponse) {
+    option (google.api.http).get = "/byx/payments/v1/payment_requests/{request_id}/qr";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+message QueryGetPaymentRequestRequest {
+  uint64 id = 1;
+}
+
+message QueryGetPaymentRequestResponse {
+  PaymentRequest payment_request = 1;
+}
+
+message QueryPaymentRequestsByLojaRequest {
+  uint64 loja_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryPaymentRequestsByLojaResponse {
+  repeated PaymentRequest payment_requests = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPaymentsQRCodeRequest {
+  uint64 request_id = 1;
+  uint64 suggested_certificate_id = 2;
+}
+
+message QueryPaymentsQRCodeResponse {
+  string request_id = 1;
+  uint64 amount_microbyx = 2;
+  uint64 merchant_id = 3;
+  string merchant_owner = 4;
+  uint64 suggested_certificate_id = 5;
+  // JSON compacto pronto para virar QR: {"t":"byxpay","rid":"...","amt":"...","mid":1,"to":"byx1..."}
+  string qr_payload = 6;
+}

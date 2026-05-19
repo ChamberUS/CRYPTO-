@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package byx.lojas.v1;
+
+import "amino/amino.proto";
+import "byx/lojas/v1/merchant.proto";
+import "byx/lojas/v1/params.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "byx/x/lojas/types";
+
+// GenesisState defines the lojas module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false];
+  repeated Merchant merchant_list = 2 [(gogoproto.nullable) = false];
+  uint64 merchant_count = 3;
+}

@@ -1,0 +1,108 @@
+syntax = "proto3";
+package byx.payments.v1;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "byx/payments/v1/params.proto";
+import "byx/payments/v1/payment.proto";
+
+option go_package = "byx/x/payments/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // Cria um novo pedido de pagamento para a loja informada.
+  rpc CreatePaymentRequest(MsgCreatePaymentRequest) returns (MsgCreatePaymentRequestResponse) {
+    option (google.api.http) = {
+      post: "/byx/payments/v1/payment_requests"
+      body: "*"
+    };
+  }
+
+  // Paga um pedido pendente.
+  rpc PayPaymentRequest(MsgPayPaymentRequest) returns (MsgPayPaymentRequestResponse) {
+    option (google.api.http) = {
+      post: "/byx/payments/v1/payment_requests/{request_id}/pay"
+      body: "*"
+    };
+  }
+
+  // Paga um pedido pendente e transfere um certificado na mesma tx (atômico).
+  rpc PayWithCertificate(MsgPayWithCertificate) returns (MsgPayWithCertificateResponse) {
+    option (google.api.http) = {
+      post: "/byx/payments/v1/payment_requests/{request_id}/pay_with_certificate"
+      body: "*"
+    };
+  }
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "byx/x/payments/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+// MsgCreatePaymentRequest cria um pedido de pagamento para uma loja.
+message MsgCreatePaymentRequest {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/payments/MsgCreatePaymentRequest";
+
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 loja_id = 2;
+  uint64 amount_microbyx = 3;
+  string memo = 4;
+  uint64 expires_in_seconds = 5;
+}
+
+message MsgCreatePaymentRequestResponse {
+  uint64 id = 1;
+}
+
+// MsgPayPaymentRequest permite um pagador liquidar um pedido pendente.
+message MsgPayPaymentRequest {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/payments/MsgPayPaymentRequest";
+
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 request_id = 2;
+}
+
+message MsgPayPaymentRequestResponse {
+  PaymentRequest payment_request = 1;
+}
+
+// MsgPayWithCertificate paga um pedido e transfere um certificado do payer para o merchant owner.
+message MsgPayWithCertificate {
+  option (cosmos.msg.v1.signer) = "payer";
+  option (amino.name) = "byx/payments/MsgPayWithCertificate";
+
+  // request_id é o id numérico do pedido em formato string (para payload de QR).
+  string request_id = 1;
+  uint64 certificate_id = 2;
+  string payer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgPayWithCertificateResponse {
+  PaymentRequest payment_request = 1;
+}

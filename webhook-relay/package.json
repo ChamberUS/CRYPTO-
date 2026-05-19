@@ -1,0 +1,19 @@
+{
+  "name": "webhook-relay",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pequeno worker em Node/TS que faz polling no endpoint REST do módulo `payments` e dispara webhooks para o lojista quando um pedido muda para `PAID`.",
+  "main": "index.js",
+  "scripts": {
+     "start": "node --loader ts-node/esm index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.0.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

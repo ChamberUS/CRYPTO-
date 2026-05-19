@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package byx.lojas.v1;
+
+option go_package = "byx/x/lojas/types";
+
+// REST annotations + paginação
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "byx/lojas/v1/sale.proto";
+
+// Tipos já definidos nos outros .proto
+import "byx/lojas/v1/merchant.proto";
+import "byx/lojas/v1/params.proto";
+
+// ====== Requests / Responses ======
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1; // definido em params.proto
+}
+
+message QueryGetMerchantRequest {
+  uint64 id = 1;
+}
+
+message QueryGetMerchantResponse {
+  Merchant merchant = 1; // definido em merchant.proto
+}
+
+message QueryAllMerchantRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllMerchantResponse {
+  repeated Merchant merchant = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QuerySalesByLojaRequest {
+  uint64 loja_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  uint64 start_time = 3; // unix seconds (inclusive)
+  uint64 end_time = 4;   // unix seconds (inclusive)
+}
+
+message QuerySalesByLojaResponse {
+  repeated Sale sales = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QuerySalesSummaryRequest {
+  uint64 loja_id = 1;
+}
+
+message QuerySalesSummaryResponse {
+  SalesSummary summary = 1;
+}
+
+// ====== Service ======
+
+service Query {
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/byx/lojas/v1/params";
+  }
+
+  rpc Merchant (QueryGetMerchantRequest) returns (QueryGetMerchantResponse) {
+    option (google.api.http).get = "/byx/lojas/v1/merchant/{id}";
+  }
+
+  rpc MerchantAll (QueryAllMerchantRequest) returns (QueryAllMerchantResponse) {
+    option (google.api.http).get = "/byx/lojas/v1/merchant";
+  }
+
+  rpc SalesByLoja (QuerySalesByLojaRequest) returns (QuerySalesByLojaResponse) {
+    option (google.api.http).get = "/byx/lojas/v1/sales_by_loja";
+  }
+
+  rpc SalesSummary (QuerySalesSummaryRequest) returns (QuerySalesSummaryResponse) {
+    option (google.api.http).get = "/byx/lojas/v1/sales_summary";
+  }
+}

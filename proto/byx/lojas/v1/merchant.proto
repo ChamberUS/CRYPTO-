@@ -1,0 +1,15 @@
+syntax = "proto3";
+package byx.lojas.v1;
+
+option go_package = "byx/x/lojas/types";
+
+// Merchant defines the Merchant message.
+message Merchant {
+  uint64 id = 1;
+  string nome = 2;
+  string endereco = 3;
+  string cpfcnpj = 4;
+  string telefone = 5;
+  string saldo = 6;
+  string creator = 7;
+}

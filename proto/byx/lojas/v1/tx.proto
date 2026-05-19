@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+package byx.lojas.v1;
+
+import "amino/amino.proto";
+import "byx/lojas/v1/params.proto";
+import "cosmos/msg/v1/msg.proto";
+import "google/api/annotations.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "byx/x/lojas/types";
+
+// --------- MENSAGENS ---------
+
+message MsgFaucet {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/MsgFaucet";
+  string creator    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string lojista_id = 2; // ex: "0"
+  string amount     = 3; // ex: "1000"
+}
+
+message MsgFaucetResponse {}
+
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "byx/x/lojas/MsgUpdateParams";
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateParamsResponse {}
+
+message MsgCreateLojista {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string nome     = 2;
+  string endereco = 3;
+  string cpfcnpj  = 4;
+  string telefone = 5;
+}
+
+message MsgCreateLojistaResponse {}
+
+message MsgTransferirByx {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/MsgTransferirByx"; // <<< aqui, não em CreateMerchant
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string de_lojista_id = 2;
+  string para_lojista_id = 3;
+  string valor = 4;
+}
+
+
+message MsgTransferirByxResponse {}
+
+message MsgRegistrarVenda {
+  option (cosmos.msg.v1.signer) = "creator";
+
+  // Endereço que assina a transação (dono/operador da loja)
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // ID da loja/merchant que está registrando a venda (segue o padrão string do módulo)
+  string loja_id = 2;
+
+  // Valor da venda em centavos de real (ex.: 1500 = R$15,00)
+  uint64 valor_em_centavos = 3;
+
+  // Endereço do cliente que vai receber o cashback (pode ser vazio)
+  string cliente = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgRegistrarVendaResponse {
+  // Cashback efetivamente creditado em micro BYX (inteiro positivo ou zero)
+  uint64 cashback_micro_byx = 1;
+}
+
+message MsgCreateMerchant {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string nome     = 2;
+  string endereco = 3;
+  string cpfcnpj  = 4;
+  string telefone = 5;
+  string saldo    = 6;
+}
+
+message MsgCreateMerchantResponse {
+  uint64 id = 1;
+}
+
+message MsgUpdateMerchant {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 id       = 2;
+  string nome     = 3;
+  string endereco = 4;
+  string cpfcnpj  = 5;
+  string telefone = 6;
+  string saldo    = 7;
+}
+
+message MsgUpdateMerchantResponse {}
+
+message MsgDeleteMerchant {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 id      = 2;
+}
+
+message MsgDeleteMerchantResponse {}
+
+// --------- SERVICE ---------
+service Msg {
+  // *** obrigatório para módulos Cosmos ***
+  option (cosmos.msg.v1.service) = true;
+
+  // Params (exigido porque o módulo tem x/params)
+  rpc UpdateParams (MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // Seus RPCs existentes
+  rpc CreateLojista   (MsgCreateLojista)    returns (MsgCreateLojistaResponse);
+  rpc TransferirByx   (MsgTransferirByx)    returns (MsgTransferirByxResponse);
+  rpc CreateMerchant  (MsgCreateMerchant)   returns (MsgCreateMerchantResponse);
+  rpc UpdateMerchant  (MsgUpdateMerchant)   returns (MsgUpdateMerchantResponse);
+  rpc DeleteMerchant  (MsgDeleteMerchant)   returns (MsgDeleteMerchantResponse);
+
+  rpc RegistrarVenda (MsgRegistrarVenda) returns (MsgRegistrarVendaResponse);
+
+  // Faucet (com rota REST)
+  rpc Faucet (MsgFaucet) returns (MsgFaucetResponse) {
+    option (google.api.http) = {
+      post: "/byx/lojas/faucet"
+      body: "*"
+    };
+  }
+}

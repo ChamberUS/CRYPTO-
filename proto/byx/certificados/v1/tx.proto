@@ -1,0 +1,134 @@
+syntax = "proto3";
+package byx.certificados.v1;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "byx/certificados/v1/params.proto";
+import "byx/certificados/v1/certificate.proto";
+
+option go_package = "byx/x/certificados/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // Emite um certificado vinculado a um merchant_id.
+  rpc IssueCertificate(MsgIssueCertificate) returns (MsgIssueCertificateResponse) {
+    option (google.api.http) = {
+      post: "/byx/certificados/v1/certificates"
+      body: "*"
+    };
+  }
+
+  // Transfere propriedade de um certificado.
+  rpc TransferCertificate(MsgTransferCertificate) returns (MsgTransferCertificateResponse) {
+    option (google.api.http) = {
+      post: "/byx/certificados/v1/certificates/{certificate_id}/transfer"
+      body: "*"
+    };
+  }
+
+  // Adiciona um registro de serviço/manutenção.
+  rpc AddServiceRecord(MsgAddServiceRecord) returns (MsgAddServiceRecordResponse) {
+    option (google.api.http) = {
+      post: "/byx/certificados/v1/certificates/{certificate_id}/service"
+      body: "*"
+    };
+  }
+
+  // Revoga um certificado (apenas emissor/merchant owner).
+  rpc RevokeCertificate(MsgRevokeCertificate) returns (MsgRevokeCertificateResponse) {
+    option (google.api.http) = {
+      post: "/byx/certificados/v1/certificates/{certificate_id}/revoke"
+      body: "*"
+    };
+  }
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "byx/x/certificados/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+// MsgIssueCertificate cria um certificado.
+message MsgIssueCertificate {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/certificados/MsgIssueCertificate";
+
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 merchant_id = 2;
+  string owner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string category = 4;
+  string brand = 5;
+  string model = 6;
+  string serial_hash = 7;
+  string condition = 8;
+  string notes = 9;
+  string image_uri = 10;
+  string image_sha256 = 11;
+  string image_seed = 12;
+}
+
+message MsgIssueCertificateResponse {
+  uint64 id = 1;
+}
+
+// MsgTransferCertificate transfere a propriedade.
+message MsgTransferCertificate {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/certificados/MsgTransferCertificate";
+
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 certificate_id = 2;
+  string new_owner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgTransferCertificateResponse {}
+
+// MsgAddServiceRecord adiciona um registro de manutenção/upgrade.
+message MsgAddServiceRecord {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/certificados/MsgAddServiceRecord";
+
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 certificate_id = 2;
+  string kind = 3;
+  string details = 4;
+}
+
+message MsgAddServiceRecordResponse {
+  ServiceRecord record = 1;
+}
+
+// MsgRevokeCertificate revoga um certificado.
+message MsgRevokeCertificate {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name) = "byx/certificados/MsgRevokeCertificate";
+
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 certificate_id = 2;
+  string reason = 3;
+}
+
+message MsgRevokeCertificateResponse {}

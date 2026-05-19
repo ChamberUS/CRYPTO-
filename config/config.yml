@@ -1,0 +1,10 @@
+name: byx
+address_prefix: byx
+token_denom: byx
+token_metadata:
+  name: Buynnex Token
+  symbol: BYX
+  decimals: 6
+  supply:
+    initial: "1000000000"
+    mintable: false

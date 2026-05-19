@@ -1,0 +1,9 @@
+{
+  "name": "cdp-image-gen",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "canvas": "^2.11.2"
+  }
+}

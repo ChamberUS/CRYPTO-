@@ -1,0 +1,4 @@
+# Ports in use:
+# validator: p2p 26656, rpc 26657 (localhost), api 1317 (localhost)
+# sentry:    p2p 27656, rpc 27657 (localhost), api disabled
+# rpc-full:  p2p 28656, rpc 28657 (localhost), api 1417 (localhost)

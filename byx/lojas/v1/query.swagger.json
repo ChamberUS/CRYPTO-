@@ -1,0 +1,515 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "byx/lojas/v1/query.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "Query"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/byx/lojas/v1/merchant": {
+      "get": {
+        "operationId": "Query_MerchantAll",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.QueryAllMerchantResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs.\ncount_total is only respected when offset is used. It is ignored when key\nis set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "pagination.reverse",
+            "description": "reverse is set to true if results are to be returned in the descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/byx/lojas/v1/merchant/{id}": {
+      "get": {
+        "operationId": "Query_Merchant",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.QueryGetMerchantResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/byx/lojas/v1/params": {
+      "get": {
+        "operationId": "Query_Params",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.QueryParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/byx/lojas/v1/sales_by_loja": {
+      "get": {
+        "operationId": "Query_SalesByLoja",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.QuerySalesByLojaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "loja_id",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.key",
+            "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "byte"
+          },
+          {
+            "name": "pagination.offset",
+            "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.limit",
+            "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "pagination.count_total",
+            "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs.\ncount_total is only respected when offset is used. It is ignored when key\nis set.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "pagination.reverse",
+            "description": "reverse is set to true if results are to be returned in the descending order.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/byx/lojas/v1/sales_summary": {
+      "get": {
+        "operationId": "Query_SalesSummary",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.lojas.v1.QuerySalesSummaryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "loja_id",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "byx.lojas.v1.Merchant": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "nome": {
+          "type": "string"
+        },
+        "endereco": {
+          "type": "string"
+        },
+        "cpfcnpj": {
+          "type": "string"
+        },
+        "telefone": {
+          "type": "string"
+        },
+        "saldo": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "string"
+        }
+      },
+      "description": "Merchant defines the Merchant message."
+    },
+    "byx.lojas.v1.Params": {
+      "type": "object",
+      "properties": {
+        "faucet_admin": {
+          "type": "string",
+          "title": "Endereço bech32 que pode chamar o faucet (opcional)"
+        },
+        "faucet_enabled": {
+          "type": "boolean",
+          "title": "Liga/desliga o faucet no módulo"
+        },
+        "faucet_max_per_tx": {
+          "type": "string",
+          "title": "Limite por transação do faucet (Int em string, ex \"1000\")"
+        },
+        "cashback_rate_micro_byx_per_real": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Cashback em micro BYX por real gasto (ex.: 2500 = 0.0025 BYX/R$1)"
+        },
+        "max_valor_venda_em_centavos": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Limite máximo de valor de venda em centavos (anti-abuso)"
+        },
+        "max_cashback_micro_byx_por_venda": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Limite máximo de cashback por venda em micro BYX"
+        },
+        "max_cashback_daily_per_loja_microbyx": {
+          "type": "string",
+          "format": "uint64",
+          "title": "Limite diário de cashback por loja (micro BYX)"
+        },
+        "max_sales_per_block_per_loja": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Limite de vendas por bloco por loja"
+        },
+        "limits_enabled": {
+          "type": "boolean",
+          "title": "Habilita/desabilita verificações de limite"
+        },
+        "cashback_daily_retention_days": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Quantos dias manter acumulador diário antes de limpar (MVP simples)"
+        }
+      },
+      "title": "Parâmetros do módulo lojas"
+    },
+    "byx.lojas.v1.QueryAllMerchantResponse": {
+      "type": "object",
+      "properties": {
+        "merchant": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/byx.lojas.v1.Merchant"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/cosmos.base.query.v1beta1.PageResponse"
+        }
+      }
+    },
+    "byx.lojas.v1.QueryGetMerchantResponse": {
+      "type": "object",
+      "properties": {
+        "merchant": {
+          "$ref": "#/definitions/byx.lojas.v1.Merchant"
+        }
+      }
+    },
+    "byx.lojas.v1.QueryParamsResponse": {
+      "type": "object",
+      "properties": {
+        "params": {
+          "$ref": "#/definitions/byx.lojas.v1.Params"
+        }
+      }
+    },
+    "byx.lojas.v1.QuerySalesByLojaResponse": {
+      "type": "object",
+      "properties": {
+        "sales": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/byx.lojas.v1.Sale"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/cosmos.base.query.v1beta1.PageResponse"
+        }
+      }
+    },
+    "byx.lojas.v1.QuerySalesSummaryResponse": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "$ref": "#/definitions/byx.lojas.v1.SalesSummary"
+        }
+      }
+    },
+    "byx.lojas.v1.Sale": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "loja_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "valor_em_centavos": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "cliente": {
+          "type": "string"
+        },
+        "cashback_micro_byx": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "block_time": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "byx.lojas.v1.SalesSummary": {
+      "type": "object",
+      "properties": {
+        "loja_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "total_vendas": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "total_valor_em_centavos": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "total_cashback_micro_byx": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ticket_medio_em_centavos": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "cosmos.base.query.v1beta1.PageRequest": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "format": "byte",
+          "description": "key is a value returned in PageResponse.next_key to begin\nquerying the next page most efficiently. Only one of offset or key\nshould be set."
+        },
+        "offset": {
+          "type": "string",
+          "format": "uint64",
+          "description": "offset is a numeric offset that can be used when key is unavailable.\nIt is less efficient than using key. Only one of offset or key should\nbe set."
+        },
+        "limit": {
+          "type": "string",
+          "format": "uint64",
+          "description": "limit is the total number of results to be returned in the result page.\nIf left empty it will default to a value to be set by each app."
+        },
+        "count_total": {
+          "type": "boolean",
+          "description": "count_total is set to true  to indicate that the result set should include\na count of the total number of items available for pagination in UIs.\ncount_total is only respected when offset is used. It is ignored when key\nis set."
+        },
+        "reverse": {
+          "type": "boolean",
+          "description": "reverse is set to true if results are to be returned in the descending order."
+        }
+      },
+      "description": "message SomeRequest {\n         Foo some_parameter = 1;\n         PageRequest pagination = 2;\n }",
+      "title": "PageRequest is to be embedded in gRPC request messages for efficient\npagination. Ex:"
+    },
+    "cosmos.base.query.v1beta1.PageResponse": {
+      "type": "object",
+      "properties": {
+        "next_key": {
+          "type": "string",
+          "format": "byte",
+          "description": "next_key is the key to be passed to PageRequest.key to\nquery the next page most efficiently. It will be empty if\nthere are no more results."
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64",
+          "title": "total is total number of results available if PageRequest.count_total\nwas set, its value is undefined otherwise"
+        }
+      },
+      "description": "PageResponse is to be embedded in gRPC response messages where the\ncorresponding request message has used PageRequest.\n\n message SomeResponse {\n         repeated Bar results = 1;\n         PageResponse page = 2;\n }"
+    },
+    "google.protobuf.Any": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "google.rpc.Status": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/google.protobuf.Any"
+          }
+        }
+      }
+    }
+  }
+}

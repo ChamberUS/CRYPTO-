@@ -1,0 +1,23 @@
+syntax = "proto3";
+package byx.certificados.v1;
+
+import "gogoproto/gogo.proto";
+import "byx/certificados/v1/params.proto";
+import "byx/certificados/v1/certificate.proto";
+
+option go_package = "byx/x/certificados/types";
+
+// GenesisState defines the certificados module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  repeated Certificate certificates = 2 [(gogoproto.nullable) = false];
+  uint64 certificate_count = 3;
+  repeated ServiceRecord service_records = 4 [(gogoproto.nullable) = false];
+  repeated ServiceCount service_counts = 5 [(gogoproto.nullable) = false];
+}
+
+// ServiceCount mantém o número de registros de serviço por certificado.
+message ServiceCount {
+  uint64 certificate_id = 1;
+  uint64 count = 2;
+}
