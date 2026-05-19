@@ -26,9 +26,11 @@ func (k msgServer) CreateMerchant(ctx context.Context, msg *types.MsgCreateMerch
 		Creator:  msg.Creator,
 		Nome:     msg.Nome,
 		Endereco: msg.Endereco,
-		Cpfcnpj:  msg.Cpfcnpj,
-		Telefone: msg.Telefone,
-		Saldo:    msg.Saldo,
+		// P0 hardening: nunca persistir PII em claro on-chain.
+		Cpfcnpj:  "",
+		Telefone: "",
+		// P0 hardening: saldo não vem da mensagem do usuário.
+		Saldo: "0",
 	}
 
 	if err := k.SetMerchant(sdkCtx, merchant); err != nil {
@@ -43,8 +45,6 @@ func (k msgServer) CreateMerchant(ctx context.Context, msg *types.MsgCreateMerch
 			sdk.NewAttribute("merchant_id", fmt.Sprintf("%d", id)),
 			sdk.NewAttribute("creator", msg.Creator),
 			sdk.NewAttribute("nome", msg.Nome),
-			sdk.NewAttribute("cpfcnpj", msg.Cpfcnpj),
-			sdk.NewAttribute("telefone", msg.Telefone),
 		),
 	)
 
@@ -60,16 +60,6 @@ func (k msgServer) UpdateMerchant(ctx context.Context, msg *types.MsgUpdateMerch
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	merchant := types.Merchant{
-		Creator:  msg.Creator,
-		Id:       msg.Id,
-		Nome:     msg.Nome,
-		Endereco: msg.Endereco,
-		Cpfcnpj:  msg.Cpfcnpj,
-		Telefone: msg.Telefone,
-		Saldo:    msg.Saldo,
-	}
-
 	current, found := k.getMerchant(sdkCtx, msg.Id)
 	if !found {
 		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %d doesn't exist", msg.Id))
@@ -77,6 +67,18 @@ func (k msgServer) UpdateMerchant(ctx context.Context, msg *types.MsgUpdateMerch
 
 	if msg.Creator != current.Creator {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	}
+
+	merchant := types.Merchant{
+		Creator:  current.Creator,
+		Id:       current.Id,
+		Nome:     msg.Nome,
+		Endereco: msg.Endereco,
+		// P0 hardening: PII não deve ser persistido em claro.
+		Cpfcnpj:  "",
+		Telefone: "",
+		// P0 hardening: preservar saldo atual, ignorar msg.Saldo.
+		Saldo: current.Saldo,
 	}
 
 	if err := k.SetMerchant(sdkCtx, merchant); err != nil {

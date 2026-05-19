@@ -11,6 +11,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func redactMerchantPublic(m types.Merchant) types.Merchant {
+	m.Cpfcnpj = ""
+	m.Telefone = ""
+	return m
+}
+
 // GET /byx/lojas/v1/merchant
 func (k *Keeper) MerchantAll(ctx context.Context, req *types.QueryAllMerchantRequest) (*types.QueryAllMerchantResponse, error) {
 	if req == nil {
@@ -24,6 +30,7 @@ func (k *Keeper) MerchantAll(ctx context.Context, req *types.QueryAllMerchantReq
 	pageRes, err := sdkquery.Paginate(store, req.Pagination, func(_ []byte, value []byte) error {
 		var merchant types.Merchant
 		k.cdc.MustUnmarshal(value, &merchant)
+		merchant = redactMerchantPublic(merchant)
 		merchants = append(merchants, &merchant)
 		return nil
 	})
@@ -43,5 +50,6 @@ func (k *Keeper) Merchant(ctx context.Context, req *types.QueryGetMerchantReques
 	if !found {
 		return nil, status.Error(codes.NotFound, "merchant not found")
 	}
+	m = redactMerchantPublic(m)
 	return &types.QueryGetMerchantResponse{Merchant: &m}, nil
 }

@@ -87,7 +87,7 @@ var (
 		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: nft.ModuleName},
 		{Account: certificadostypes.ModuleName},
-		{Account: lojasmoduletypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
+		{Account: lojasmoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: feesplittypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: feesplittypes.TreasuryModuleAccount},
 

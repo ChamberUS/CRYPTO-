@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
@@ -122,4 +123,48 @@ func TestMerchantMsgServerDelete(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMerchantSaldoAndPIIHardening(t *testing.T) {
+	f := initFixture(t)
+	srv := keeper.NewMsgServerImpl(f.keeper)
+
+	creator, err := f.addressCodec.BytesToString([]byte("ownerAddr___________________"))
+	require.NoError(t, err)
+
+	createResp, err := srv.CreateMerchant(f.ctx, &types.MsgCreateMerchant{
+		Creator:  creator,
+		Nome:     "Loja Segura",
+		Endereco: creator,
+		Cpfcnpj:  "12345678901",
+		Telefone: "11999999999",
+		Saldo:    "999999",
+	})
+	require.NoError(t, err)
+
+	created, err := f.keeper.GetMerchant(f.ctx, createResp.Id)
+	require.NoError(t, err)
+	require.Equal(t, "0", created.Saldo, "create must ignore user-provided saldo")
+	require.Equal(t, "", created.Cpfcnpj, "cpfcnpj must not be persisted")
+	require.Equal(t, "", created.Telefone, "telefone must not be persisted")
+
+	created.Saldo = "77"
+	require.NoError(t, f.keeper.SetMerchant(sdk.UnwrapSDKContext(f.ctx), created))
+
+	_, err = srv.UpdateMerchant(f.ctx, &types.MsgUpdateMerchant{
+		Creator:  creator,
+		Id:       createResp.Id,
+		Nome:     "Loja Segura 2",
+		Endereco: creator,
+		Cpfcnpj:  "00000000000",
+		Telefone: "11888888888",
+		Saldo:    "123456",
+	})
+	require.NoError(t, err)
+
+	updated, err := f.keeper.GetMerchant(f.ctx, createResp.Id)
+	require.NoError(t, err)
+	require.Equal(t, "77", updated.Saldo, "update must preserve existing saldo")
+	require.Equal(t, "", updated.Cpfcnpj, "cpfcnpj must remain redacted")
+	require.Equal(t, "", updated.Telefone, "telefone must remain redacted")
 }

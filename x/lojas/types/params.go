@@ -27,8 +27,9 @@ func NewParams(admin string, enabled bool, maxPerTx string) Params {
 // DefaultParams define os defaults usados no init genesis.
 func DefaultParams() Params {
 	return Params{
-		FaucetAdmin:                     "",     // pode deixar vazio em dev
-		FaucetEnabled:                   true,   // ligado por padrão em dev
+		// Safe-by-default: faucet desabilitado até configuração explícita.
+		FaucetAdmin:                     "",
+		FaucetEnabled:                   false,
 		FaucetMaxPerTx:                  "1000", // ex.: 1000 BYX por tx
 		CashbackRateMicroByxPerReal:     2500,   // 0.0025 BYX por R$1 (micro BYX)
 		MaxValorVendaEmCentavos:         1_000_000,
@@ -86,8 +87,9 @@ func (p Params) Validate() error {
 			return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "faucet_admin inválido")
 		}
 	}
-
-	// faucet_admin pode ser vazio; checagem bech32 pode ficar no handler.
+	if p.FaucetEnabled && p.FaucetAdmin == "" {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "faucet_admin é obrigatório quando faucet_enabled=true")
+	}
 	return nil
 }
 

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"strconv"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/buynnex-corp/byx/x/payments/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,6 +58,23 @@ func TestCreatePaymentRequest(t *testing.T) {
 		require.NotEmpty(t, attrs["fingerprint_hash"])
 	}
 	require.True(t, foundEvent, "created event not emitted")
+}
+
+func TestCreatePaymentRequestUnauthorizedCreator(t *testing.T) {
+	f := initFixture(t)
+	ms := keeper.NewMsgServerImpl(f.keeper)
+
+	thirdParty := sdk.AccAddress(bytes.Repeat([]byte{0x0f}, 20))
+	thirdPartyStr, err := f.addressCodec.BytesToString(thirdParty)
+	require.NoError(t, err)
+
+	_, err = ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
+		Creator:        thirdPartyStr,
+		LojaId:         1,
+		AmountMicrobyx: 1500,
+		Memo:           "forged",
+	})
+	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 }
 
 func TestCreatePaymentRequestDedupReusesPending(t *testing.T) {

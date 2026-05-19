@@ -32,11 +32,16 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "amount must be > 0")
 	}
 
-	if _, err := m.lojasKeeper.GetMerchant(goCtx, msg.LojaId); err != nil {
+	merchant, err := m.lojasKeeper.GetMerchant(goCtx, msg.LojaId)
+	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, "merchant not found")
 		}
 		return nil, err
+	}
+	// Somente dono da loja (creator) ou operador (endereco) pode abrir request.
+	if msg.Creator != merchant.Creator && msg.Creator != merchant.Endereco {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "creator not authorized for this merchant")
 	}
 
 	params, err := m.Params.Get(ctx)

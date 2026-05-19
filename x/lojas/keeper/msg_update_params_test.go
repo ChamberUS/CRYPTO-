@@ -64,6 +64,9 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: func() types.Params {
 					p := params
 					p.FaucetEnabled = !p.FaucetEnabled
+					if p.FaucetEnabled {
+						p.FaucetAdmin = authorityStr
+					}
 					p.MaxSalesPerBlockPerLoja = 30
 					return p
 				}(),

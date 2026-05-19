@@ -25,6 +25,9 @@ func (k msgServer) TransferirByx(ctx context.Context, msg *types.MsgTransferirBy
 	if err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "para_lojista_id inválido")
 	}
+	if fromID == toID {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "origem e destino não podem ser iguais")
+	}
 
 	val, ok := sdkmath.NewIntFromString(msg.Valor)
 	if !ok || !val.IsPositive() {
@@ -38,6 +41,18 @@ func (k msgServer) TransferirByx(ctx context.Context, msg *types.MsgTransferirBy
 		}
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "falha ao carregar lojista de origem")
 	}
+
+	params, err := k.ParamsStore.Get(sdkCtx)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "falha ao ler params do módulo")
+	}
+	isOwner := msg.Creator == from.Creator
+	isOperator := msg.Creator == from.Endereco
+	isAdmin := params.FaucetAdmin != "" && msg.Creator == params.FaucetAdmin
+	if !isOwner && !isOperator && !isAdmin {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "creator não autorizado para transferir da loja de origem")
+	}
+
 	to, err := k.GetMerchant(ctx, toID)
 	if err != nil {
 		if errorsmod.IsOf(err, collections.ErrNotFound) {

@@ -9,9 +9,6 @@ require('dotenv').config();
 const execFileP = util.promisify(execFile);
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-
 // estáticos
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir));
@@ -24,8 +21,26 @@ const {
   CHAIN_ID = 'byx',
   ADMIN_KEY = 'marcelo',
   KEYRING = 'test',
-  FEES = '0byx',
+  FEES = '25000ubyx',
+  CORS_ORIGIN = 'http://localhost:3000',
+  ENABLE_WEB_FAUCET = 'false',
 } = process.env;
+
+if (ENABLE_WEB_FAUCET !== 'true') {
+  throw new Error('web-faucet desabilitado. Defina ENABLE_WEB_FAUCET=true apenas em ambiente de desenvolvimento.');
+}
+
+if (process.env.NODE_ENV === 'production') {
+  if (KEYRING === 'test') {
+    throw new Error('KEYRING=test não é permitido em produção.');
+  }
+  if (ADMIN_KEY === 'marcelo') {
+    throw new Error('ADMIN_KEY padrão não é permitido em produção.');
+  }
+}
+
+app.use(cors({ origin: CORS_ORIGIN }));
+app.use(express.json());
 
 const okStderr = (s) => !s || /gas estimate|I\[/.test(s);
 const safeJSON  = (s) => { try { return JSON.parse(s); } catch { return s; } };

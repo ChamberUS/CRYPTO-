@@ -39,22 +39,24 @@ func (k msgServer) Faucet(goCtx context.Context, msg *types.MsgFaucet) (*types.M
 	// 3) Resolver qual admin deve ser usado (params)
 	adminStr := params.FaucetAdmin
 
-	// 4) Caso exista admin configurado, validar que o creator é o admin
-	if adminStr != "" {
-		creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "creator inválido (endereço mal formatado)")
-		}
+	// 4) Em qualquer cenário habilitado, admin deve estar configurado.
+	if adminStr == "" {
+		return nil, status.Error(codes.FailedPrecondition, "faucet_admin obrigatório quando faucet estiver habilitado")
+	}
 
-		adminAddr, err := sdk.AccAddressFromBech32(adminStr)
-		if err != nil {
-			// erro interno: configuramos FaucetAdmin errado no código ou params
-			return nil, status.Error(codes.Internal, "FaucetAdmin mal configurado (bech32 inválido)")
-		}
+	creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "creator inválido (endereço mal formatado)")
+	}
 
-		if !creatorAddr.Equals(adminAddr) {
-			return nil, status.Error(codes.PermissionDenied, "apenas o admin pode usar o faucet")
-		}
+	adminAddr, err := sdk.AccAddressFromBech32(adminStr)
+	if err != nil {
+		// erro interno: configuramos FaucetAdmin errado no código ou params
+		return nil, status.Error(codes.Internal, "FaucetAdmin mal configurado (bech32 inválido)")
+	}
+
+	if !creatorAddr.Equals(adminAddr) {
+		return nil, status.Error(codes.PermissionDenied, "apenas o admin pode usar o faucet")
 	}
 
 	// 5) Validar amount

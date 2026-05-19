@@ -150,8 +150,8 @@ func (k Keeper) CalculateCashbackFromCentavos(ctx sdk.Context, valorEmCentavos i
 	return sdk.NewCoin(types.DenomBYX, math.NewInt(cashbackMicro))
 }
 
-// MintBYXTo faz o mint de uma quantidade positiva de BYX para uma conta.
-// Ele utiliza a module account do módulo "lojas" (types.ModuleName) como origem do mint.
+// MintBYXTo credita BYX para uma conta usando reserva pré-existente da module account.
+// Observação: não faz mint. Emite erro se a reserva não tiver saldo suficiente.
 func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int) error {
 	if !amount.IsPositive() {
 		return fmt.Errorf("amount must be positive")
@@ -160,12 +160,7 @@ func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int)
 	coin := sdk.NewCoin(types.DenomBYX, amount)
 	coins := sdk.NewCoins(coin)
 
-	// Mint na module account do módulo "lojas".
-	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
-		return err
-	}
-
-	// Envia da module account para a conta de destino.
+	// Envia da module account para a conta de destino (modo supply fixo).
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins); err != nil {
 		return err
 	}
@@ -173,7 +168,7 @@ func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int)
 	// Evento para facilitar indexação e debug.
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			"lojas_mint_byx",
+			"lojas_reserve_transfer_byx",
 			sdk.NewAttribute("to", addr.String()),
 			sdk.NewAttribute("amount", amount.String()),
 		),
