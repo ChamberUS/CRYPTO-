@@ -3,7 +3,8 @@
 API minima para teste fechado do app BYX. Este servico e **somente DEVNET / TESTE FECHADO**.
 Nao use esta API em mainnet, ambiente publico ou fluxo financeiro real.
 
-O app mobile/web deve chamar esta API, nao o RPC `26657` diretamente. O backend acessa a chain via `byxd` local usando `NODE`, `CHAIN_ID`, `BYXD_HOME` e `KEYRING_BACKEND`.
+O app mobile/web deve chamar esta API, nao o RPC `26657` diretamente. O backend acessa a chain via `byxd` local usando `BYX_NODE_RPC`, `CHAIN_ID`, `BYXD_HOME` e `KEYRING_BACKEND`.
+Compatibilidade temporaria: se `BYX_NODE_RPC` nao existir, ele tenta `BYXD_NODE` e por ultimo `NODE`, mas rejeita qualquer valor que nao comece com `tcp://`, `http://` ou `https://`.
 
 ## Seguranca
 
@@ -54,7 +55,7 @@ O pagamento usa a chave local indicada em `BYX_DEVNET_PAYER_KEY`.
 Copie `.env.example` para `/etc/byx/byx-backend.env` ou carregue no ambiente do processo.
 
 ```sh
-NODE=tcp://127.0.0.1:26657
+BYX_NODE_RPC=tcp://127.0.0.1:26657
 CHAIN_ID=byx-devnet
 BYXD_HOME=/var/lib/byxd
 KEYRING_BACKEND=test

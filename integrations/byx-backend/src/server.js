@@ -1,36 +1,57 @@
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { pathToFileURL } from "node:url";
 import express from "express";
 
-const REQUIRED_ENV = ["NODE", "CHAIN_ID", "BYXD_HOME", "KEYRING_BACKEND"];
-const config = {
-  port: envNumber("PORT", 8080),
-  node: requiredEnv("NODE"),
-  chainId: requiredEnv("CHAIN_ID"),
-  byxdHome: requiredEnv("BYXD_HOME"),
-  keyringBackend: requiredEnv("KEYRING_BACKEND"),
-  byxdBin: process.env.BYXD_BIN || "byxd",
-  allowProductionRun: process.env.BYX_BACKEND_ALLOW_PRODUCTION === "true",
-  apiToken: process.env.BYX_BACKEND_API_TOKEN || "",
-  allowUnauthenticated: process.env.BYX_ALLOW_UNAUTHENTICATED === "true",
-  createPaymentKey: process.env.BYX_CREATE_PAYMENT_KEY || "",
-  devnetPayerKey: process.env.BYX_DEVNET_PAYER_KEY || "",
-  txFees: process.env.BYX_TX_FEES || "5000byx",
-  txGas: process.env.BYX_TX_GAS || "auto",
-  txGasAdjustment: process.env.BYX_TX_GAS_ADJUSTMENT || "1.3",
-  maxPaymentMicrobyx: envBigInt("BYX_MAX_PAYMENT_MICROBYX", 1_000_000_000_000n),
-  cliTimeoutMs: envNumber("BYX_CLI_TIMEOUT_MS", 20_000),
-  txWaitMs: envNumber("BYX_TX_WAIT_MS", 15_000),
-};
+const REQUIRED_ENV = ["CHAIN_ID", "BYXD_HOME", "KEYRING_BACKEND"];
+const NODE_RPC_PATTERN = /^(tcp|http|https):\/\//;
 
-for (const name of REQUIRED_ENV) {
-  if (!process.env[name]) {
-    throw new Error(`missing required env ${name}`);
+export function resolveNodeRpc(env = process.env) {
+  const nodeRpc = env.BYX_NODE_RPC || env.BYXD_NODE || env.NODE;
+  if (!nodeRpc) {
+    throw new Error("missing required env BYX_NODE_RPC or BYXD_NODE");
   }
+  if (!NODE_RPC_PATTERN.test(nodeRpc)) {
+    throw new Error("BYX_NODE_RPC/BYXD_NODE must start with tcp://, http://, or https://");
+  }
+  return nodeRpc;
 }
-if (process.env.NODE_ENV === "production" && !config.allowProductionRun) {
-  throw new Error("refusing to run with NODE_ENV=production unless BYX_BACKEND_ALLOW_PRODUCTION=true");
+
+function buildConfig(env = process.env) {
+  for (const name of REQUIRED_ENV) {
+    if (!env[name]) {
+      throw new Error(`missing required env ${name}`);
+    }
+  }
+
+  const config = {
+    port: envNumber("PORT", 8080, env),
+    nodeRpc: resolveNodeRpc(env),
+    chainId: requiredEnv("CHAIN_ID", env),
+    byxdHome: requiredEnv("BYXD_HOME", env),
+    keyringBackend: requiredEnv("KEYRING_BACKEND", env),
+    byxdBin: env.BYXD_BIN || "byxd",
+    allowProductionRun: env.BYX_BACKEND_ALLOW_PRODUCTION === "true",
+    apiToken: env.BYX_BACKEND_API_TOKEN || "",
+    allowUnauthenticated: env.BYX_ALLOW_UNAUTHENTICATED === "true",
+    createPaymentKey: env.BYX_CREATE_PAYMENT_KEY || "",
+    devnetPayerKey: env.BYX_DEVNET_PAYER_KEY || "",
+    txFees: env.BYX_TX_FEES || "5000byx",
+    txGas: env.BYX_TX_GAS || "auto",
+    txGasAdjustment: env.BYX_TX_GAS_ADJUSTMENT || "1.3",
+    maxPaymentMicrobyx: envBigInt("BYX_MAX_PAYMENT_MICROBYX", 1_000_000_000_000n, env),
+    cliTimeoutMs: envNumber("BYX_CLI_TIMEOUT_MS", 20_000, env),
+    txWaitMs: envNumber("BYX_TX_WAIT_MS", 15_000, env),
+  };
+
+  if (env.NODE_ENV === "production" && !config.allowProductionRun) {
+    throw new Error("refusing to run with NODE_ENV=production unless BYX_BACKEND_ALLOW_PRODUCTION=true");
+  }
+
+  return config;
 }
+
+const config = buildConfig();
 
 const app = express();
 app.disable("x-powered-by");
@@ -67,7 +88,7 @@ app.get("/v1/devnet/health", asyncHandler(async () => {
   return {
     environment: "DEVNET_TESTE_FECHADO",
     chain_id: config.chainId,
-    node: config.node,
+    node_rpc: config.nodeRpc,
     latest_block_height: status?.sync_info?.latest_block_height || null,
     catching_up: status?.sync_info?.catching_up ?? null,
     node_info: {
@@ -210,23 +231,11 @@ app.use((err, req, res, _next) => {
   });
 });
 
-app.listen(config.port, () => {
-  logInfo("server_started", {
-    environment: "DEVNET_TESTE_FECHADO",
-    port: config.port,
-    chain_id: config.chainId,
-    node: config.node,
-    keyring_backend: config.keyringBackend,
-    auth: config.allowUnauthenticated ? "disabled" : "bearer",
-    production_run: config.allowProductionRun,
-  });
-});
-
 function txArgs(fromKey) {
   return [
     "--from", fromKey,
     "--chain-id", config.chainId,
-    "--node", config.node,
+    "--node", config.nodeRpc,
     "--home", config.byxdHome,
     "--keyring-backend", config.keyringBackend,
     "--fees", config.txFees,
@@ -239,7 +248,7 @@ function txArgs(fromKey) {
 
 function queryArgs() {
   return [
-    "--node", config.node,
+    "--node", config.nodeRpc,
     "--home", config.byxdHome,
     "--output", "json",
   ];
@@ -305,12 +314,12 @@ function asyncHandler(handler) {
   };
 }
 
-function requiredEnv(name) {
-  return process.env[name] || "";
+function requiredEnv(name, env = process.env) {
+  return env[name] || "";
 }
 
-function envNumber(name, fallback) {
-  const value = process.env[name];
+function envNumber(name, fallback, env = process.env) {
+  const value = env[name];
   if (!value) return fallback;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -319,8 +328,8 @@ function envNumber(name, fallback) {
   return parsed;
 }
 
-function envBigInt(name, fallback) {
-  const value = process.env[name];
+function envBigInt(name, fallback, env = process.env) {
+  const value = env[name];
   if (!value) return fallback;
   if (!/^[1-9][0-9]*$/.test(value)) {
     throw new Error(`${name} must be a positive integer`);
@@ -432,4 +441,22 @@ function logInfo(event, fields) {
 
 function logError(event, fields) {
   console.error(JSON.stringify({ level: "error", event, time: new Date().toISOString(), ...fields }));
+}
+
+function startServer() {
+  app.listen(config.port, () => {
+    logInfo("server_started", {
+      environment: "DEVNET_TESTE_FECHADO",
+      port: config.port,
+      chain_id: config.chainId,
+      node_rpc: config.nodeRpc,
+      keyring_backend: config.keyringBackend,
+      auth: config.allowUnauthenticated ? "disabled" : "bearer",
+      production_run: config.allowProductionRun,
+    });
+  });
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  startServer();
 }
