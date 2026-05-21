@@ -128,8 +128,8 @@ app.post("/v1/devnet/payment-requests", asyncHandler(async (req) => {
 
   const args = [
     "tx", "payments", "create-payment-request",
-    lojaId.toString(),
-    amountMicrobyx.toString(),
+    "--loja-id", lojaId.toString(),
+    "--amount-microbyx", amountMicrobyx.toString(),
     ...txArgs(config.createPaymentKey),
   ];
   if (memo) args.push("--memo", memo);
@@ -153,7 +153,7 @@ app.post("/v1/devnet/payment-requests", asyncHandler(async (req) => {
 
 app.get("/v1/devnet/payment-requests/:id", asyncHandler(async (req) => {
   const id = parsePositiveUint(req.params.id, "id");
-  return byxdJSON(["query", "payments", "payment-request", id.toString()]);
+  return byxdJSON(["query", "payments", "payment-request", "--id", id.toString()]);
 }));
 
 app.get("/v1/devnet/payment-requests/:id/qr", asyncHandler(async (req) => {
@@ -192,13 +192,13 @@ app.post("/v1/devnet/game/petz/reward", requireBearerRoute, asyncHandler(async (
 app.post("/v1/devnet/payment-requests/:id/pay", asyncHandler(async (req) => {
   requireTxKey(config.devnetPayerKey, "BYX_DEVNET_PAYER_KEY");
   const id = parsePositiveUint(req.params.id, "id");
-  const before = await byxdJSON(["query", "payments", "payment-request", id.toString()]);
+  const before = await byxdJSON(["query", "payments", "payment-request", "--id", id.toString()]);
   const paymentRequest = before?.payment_request || before?.paymentRequest || before;
   const lojaId = Number(paymentRequest?.loja_id || paymentRequest?.lojaId || 0) || null;
 
   const tx = await broadcastTx([
     "tx", "payments", "pay-payment-request",
-    id.toString(),
+    "--request-id", id.toString(),
     ...txArgs(config.devnetPayerKey),
   ]);
   const txhash = extractTxHash(tx);
@@ -239,10 +239,10 @@ function txArgs(fromKey) {
     "--home", config.byxdHome,
     "--keyring-backend", config.keyringBackend,
     "--fees", config.txFees,
-    "--gas", config.txGas,
-    "--gas-adjustment", config.txGasAdjustment,
-    "--yes",
-    "--output", "json",
+    ...(config.txGas ? ["--gas", config.txGas] : []),
+    ...(config.txGasAdjustment ? ["--gas-adjustment", config.txGasAdjustment] : []),
+    "-y",
+    "-o", "json",
   ];
 }
 
@@ -250,12 +250,16 @@ function queryArgs() {
   return [
     "--node", config.nodeRpc,
     "--home", config.byxdHome,
-    "--output", "json",
+    "-o", "json",
   ];
 }
 
 function byxdJSON(args) {
   const fullArgs = args[0] === "tx" ? args : [...args, ...queryArgs()];
+  logInfo("cli_exec", {
+    command: config.byxdBin,
+    args: sanitizeCliArgs(fullArgs),
+  });
   return new Promise((resolve, reject) => {
     execFile(config.byxdBin, fullArgs, {
       timeout: config.cliTimeoutMs,
@@ -427,6 +431,14 @@ function decodeMaybeBase64(value) {
 
 function cleanCliError(message) {
   return String(message).replace(/\s+/g, " ").trim().slice(0, 500);
+}
+
+function sanitizeCliArgs(args) {
+  return args.map((arg) => {
+    if (typeof arg !== "string") return arg;
+    if (arg.startsWith("Bearer ")) return "Bearer [redacted]";
+    return arg;
+  });
 }
 
 function httpError(status, message) {
