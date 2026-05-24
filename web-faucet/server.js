@@ -45,7 +45,7 @@ app.use(express.json());
 const okStderr = (s) => !s || /gas estimate|I\[/.test(s);
 const safeJSON  = (s) => { try { return JSON.parse(s); } catch { return s; } };
 
-// Faucet: usa --lojista-id e --amount
+// Faucet: usa --lojista-id e --amount em ubyx.
 app.post('/api/faucet', async (req, res) => {
   try {
     const { id, amount } = req.body || {};
@@ -72,7 +72,7 @@ app.post('/api/faucet', async (req, res) => {
   }
 });
 
-// Transfer (como você já validou)
+// Transfer (valor em ubyx; a UI converte BYX -> ubyx antes de enviar)
 app.post('/api/transfer', async (req, res) => {
   try {
     const { fromId, toId, valor } = req.body || {};

@@ -4,6 +4,12 @@ BYX is the blockchain protocol of Buynnex, focused on payment rails for merchant
 
 This repository contains the chain codebase (`byxd`) and application modules used by the BYX network.
 
+Monetary unit convention:
+
+- base on-chain denom: `ubyx`
+- human display denom: `BYX`
+- conversion: `1 BYX = 1_000_000 ubyx`
+
 ---
 
 ## Project status
@@ -150,4 +156,3 @@ Near-term engineering priorities:
 ## License
 
 Define project license in a dedicated `LICENSE` file (recommended for external contributors).
-

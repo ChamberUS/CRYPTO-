@@ -114,7 +114,7 @@ func dayKey(t time.Time) uint64 {
 	return uint64(d.Year())*10000 + uint64(d.Month())*100 + uint64(d.Day())
 }
 
-// CalculateCashbackFromCentavos calcula o cashback em micro BYX a partir de um valor em centavos.
+// CalculateCashbackFromCentavos calcula o cashback em ubyx a partir de um valor em centavos.
 // Ele sempre retorna um sdk.Coin com denom types.DenomBYX.
 func (k Keeper) CalculateCashbackFromCentavos(ctx sdk.Context, valorEmCentavos int64) sdk.Coin {
 	// Se o valor em centavos for inválido ou zero/negativo, não há cashback.
@@ -128,7 +128,7 @@ func (k Keeper) CalculateCashbackFromCentavos(ctx sdk.Context, valorEmCentavos i
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))
 	}
 
-	if params.CashbackRateMicroByxPerReal == 0 {
+	if params.CashbackRateUbyxPerReal == 0 {
 		// Rate 0 significa que o módulo está configurado para não dar cashback.
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))
 	}
@@ -140,8 +140,8 @@ func (k Keeper) CalculateCashbackFromCentavos(ctx sdk.Context, valorEmCentavos i
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))
 	}
 
-	// cashbackMicro = valorEmReais * rate (microBYX por real)
-	rate := int64(params.CashbackRateMicroByxPerReal)
+	// cashbackMicro = valorEmReais * rate (ubyx por real)
+	rate := int64(params.CashbackRateUbyxPerReal)
 	cashbackMicro := int64(valorEmReais) * rate
 	if cashbackMicro <= 0 {
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))

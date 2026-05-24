@@ -22,9 +22,9 @@ func (k *Keeper) SalesSummary(ctx context.Context, req *types.QuerySalesSummaryR
 	defer iter.Close()
 
 	var (
-		totalVendas           uint64
-		totalValorEmCentavos  uint64
-		totalCashbackMicroByx uint64
+		totalVendas          uint64
+		totalValorEmCentavos uint64
+		totalCashbackUbyx    uint64
 	)
 
 	for ; iter.Valid(); iter.Next() {
@@ -38,7 +38,7 @@ func (k *Keeper) SalesSummary(ctx context.Context, req *types.QuerySalesSummaryR
 		}
 		totalVendas++
 		totalValorEmCentavos += sale.ValorEmCentavos
-		totalCashbackMicroByx += sale.CashbackMicroByx
+		totalCashbackUbyx += sale.GetCashbackUbyx()
 	}
 
 	var ticketMedio uint64
@@ -51,7 +51,7 @@ func (k *Keeper) SalesSummary(ctx context.Context, req *types.QuerySalesSummaryR
 			LojaId:                req.LojaId,
 			TotalVendas:           totalVendas,
 			TotalValorEmCentavos:  totalValorEmCentavos,
-			TotalCashbackMicroByx: totalCashbackMicroByx,
+			TotalCashbackUbyx:     totalCashbackUbyx,
 			TicketMedioEmCentavos: ticketMedio,
 		},
 	}, nil

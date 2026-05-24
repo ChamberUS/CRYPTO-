@@ -51,8 +51,8 @@
           "address": "byx1t80zsgte8qlldqkrwdv3zs3l2fa4y65mjtu8aj",
           "coins": [
             {
-              "denom": "byx",
-              "amount": "200000000"
+              "denom": "ubyx",
+              "amount": "200000000000000"
             }
           ]
         },
@@ -60,8 +60,8 @@
           "address": "byx14qlxvqf2zuucqm0v3vm32e9cqllc6sr2yazltz",
           "coins": [
             {
-              "denom": "byx",
-              "amount": "799000000"
+              "denom": "ubyx",
+              "amount": "799000000000000"
             }
           ]
         },
@@ -69,16 +69,16 @@
           "address": "byx1kg08mgllds309jl6dt2wu65u2ctfqnwperetz0",
           "coins": [
             {
-              "denom": "byx",
-              "amount": "1000000"
+              "denom": "ubyx",
+              "amount": "1000000000000"
             }
           ]
         }
       ],
       "supply": [
         {
-          "denom": "byx",
-          "amount": "1000000000"
+          "denom": "ubyx",
+          "amount": "1000000000000000"
         }
       ],
       "denom_metadata": [
@@ -86,12 +86,16 @@
           "description": "Token oficial da rede BYX",
           "denom_units": [
             {
-              "denom": "byx",
+              "denom": "ubyx",
               "exponent": 0
+            },
+            {
+              "denom": "BYX",
+              "exponent": 6
             }
           ],
-          "base": "byx",
-          "display": "byx",
+          "base": "ubyx",
+          "display": "BYX",
           "name": "BYX Token",
           "symbol": "BYX"
         }
@@ -186,7 +190,7 @@
         "split_bps_treasury": 3000,
         "split_bps_burn": 1000,
         "denoms_allowlist": [
-          "byx"
+          "ubyx"
         ]
       }
     },
@@ -217,8 +221,8 @@
                   "key": "aNm8d+UJBdkXPWHtLiuiSHHsk8/Z3JU82u7X7BzGre8="
                 },
                 "value": {
-                  "denom": "byx",
-                  "amount": "1000000"
+                  "denom": "ubyx",
+                  "amount": "1000000000000"
                 }
               }
             ],
@@ -269,8 +273,8 @@
       "params": {
         "min_deposit": [
           {
-            "denom": "byx",
-            "amount": "10000000"
+            "denom": "ubyx",
+            "amount": "10000000000000"
           }
         ],
         "max_deposit_period": "172800s",
@@ -285,8 +289,8 @@
         "expedited_threshold": "0.667000000000000000",
         "expedited_min_deposit": [
           {
-            "denom": "byx",
-            "amount": "50000000"
+            "denom": "ubyx",
+            "amount": "50000000000000"
           }
         ],
         "burn_vote_quorum": false,
@@ -310,11 +314,11 @@
       "params": {
         "faucet_admin": "byx18c0jt2cm8dmvkdsd490ya6dap3awm7kwe90keu",
         "faucet_enabled": false,
-        "faucet_max_per_tx": "1000",
-        "cashback_rate_micro_byx_per_real": "2500",
+        "faucet_max_per_tx": "1000000000",
+        "cashback_rate_ubyx_per_real": "2500",
         "max_valor_venda_em_centavos": "1000000",
-        "max_cashback_micro_byx_por_venda": "100000",
-        "max_cashback_daily_per_loja_microbyx": "5000000",
+        "max_cashback_ubyx_por_venda": "100000",
+        "max_cashback_daily_per_loja_ubyx": "5000000",
         "max_sales_per_block_per_loja": 20,
         "limits_enabled": true,
         "cashback_daily_retention_days": 90
@@ -328,7 +332,7 @@
         "annual_provisions": "0.000000000000000000"
       },
       "params": {
-        "mint_denom": "byx",
+        "mint_denom": "ubyx",
         "inflation_rate_change": "0.000000000000000000",
         "inflation_max": "0.000000000000000000",
         "inflation_min": "0.000000000000000000",
@@ -368,7 +372,7 @@
         "max_validators": 100,
         "max_entries": 7,
         "historical_entries": 10000,
-        "bond_denom": "byx",
+        "bond_denom": "ubyx",
         "min_commission_rate": "0.000000000000000000"
       },
       "last_total_power": "0",

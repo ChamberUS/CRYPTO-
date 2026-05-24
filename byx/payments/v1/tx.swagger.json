@@ -128,6 +128,56 @@
           "Msg"
         ]
       }
+    },
+    "/byx/payments/v1/payment_requests/{request_id}/pay_with_certificate": {
+      "post": {
+        "summary": "Paga um pedido pendente e transfere um certificado na mesma tx (atômico).",
+        "operationId": "Msg_PayWithCertificate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.payments.v1.MsgPayWithCertificateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "request_id",
+            "description": "request_id é o id numérico do pedido em formato string (para payload de QR).",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "certificate_id": {
+                  "type": "string",
+                  "format": "uint64"
+                },
+                "payer": {
+                  "type": "string"
+                }
+              },
+              "description": "MsgPayWithCertificate paga um pedido e transfere um certificado do payer para o merchant owner."
+            }
+          }
+        ],
+        "tags": [
+          "Msg"
+        ]
+      }
     }
   },
   "definitions": {
@@ -141,9 +191,10 @@
           "type": "string",
           "format": "uint64"
         },
-        "amount_microbyx": {
+        "amount_ubyx": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "description": "Valor do pedido em ubyx, unidade mínima on-chain."
         },
         "memo": {
           "type": "string"
@@ -165,6 +216,14 @@
       }
     },
     "byx.payments.v1.MsgPayPaymentRequestResponse": {
+      "type": "object",
+      "properties": {
+        "payment_request": {
+          "$ref": "#/definitions/byx.payments.v1.PaymentRequest"
+        }
+      }
+    },
+    "byx.payments.v1.MsgPayWithCertificateResponse": {
       "type": "object",
       "properties": {
         "payment_request": {
@@ -222,9 +281,10 @@
           "type": "string",
           "format": "uint64"
         },
-        "amount_microbyx": {
+        "amount_ubyx": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "description": "Valor do pedido em ubyx, unidade mínima on-chain."
         },
         "memo": {
           "type": "string"

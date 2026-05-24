@@ -22,6 +22,6 @@ func (k Keeper) ensureCurrentStatus(ctx sdk.Context, pr *types.PaymentRequest) e
 	pr.Status = types.PaymentStatus_PAYMENT_STATUS_EXPIRED
 	k.SetPaymentRequest(ctx, *pr)
 	_ = k.PaymentRequests.Set(ctx, pr.Id, *pr)
-	k.DeleteDedupeRequestID(ctx, pr.LojaId, pr.AmountMicrobyx, pr.Memo)
+	k.DeleteDedupeRequestID(ctx, pr.LojaId, pr.AmountUbyx, pr.Memo)
 	return nil
 }

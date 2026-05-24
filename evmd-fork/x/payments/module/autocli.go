@@ -39,7 +39,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "CreatePaymentRequest",
-					Use:       "create-payment-request [loja-id] [amount-microbyx]",
+					Use:       "create-payment-request [loja-id] [amount-ubyx]",
 					Short:     "Create a new payment request",
 				},
 				{

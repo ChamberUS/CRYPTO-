@@ -41,10 +41,10 @@ func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams)
 		"lojas_params_updated",
 		sdk.NewAttribute("authority", req.Authority),
 		sdk.NewAttribute("faucet_enabled", strconv.FormatBool(req.Params.FaucetEnabled)),
-		sdk.NewAttribute("cashback_rate_micro_byx_per_real", strconv.FormatUint(req.Params.CashbackRateMicroByxPerReal, 10)),
+		sdk.NewAttribute("cashback_rate_ubyx_per_real", strconv.FormatUint(req.Params.CashbackRateUbyxPerReal, 10)),
 		sdk.NewAttribute("max_valor_venda_em_centavos", strconv.FormatUint(req.Params.MaxValorVendaEmCentavos, 10)),
-		sdk.NewAttribute("max_cashback_micro_byx_por_venda", strconv.FormatUint(req.Params.MaxCashbackMicroByxPorVenda, 10)),
-		sdk.NewAttribute("max_cashback_daily_per_loja_microbyx", strconv.FormatUint(req.Params.MaxCashbackDailyPerLojaMicrobyx, 10)),
+		sdk.NewAttribute("max_cashback_ubyx_por_venda", strconv.FormatUint(req.Params.MaxCashbackUbyxPorVenda, 10)),
+		sdk.NewAttribute("max_cashback_daily_per_loja_ubyx", strconv.FormatUint(req.Params.MaxCashbackDailyPerLojaUbyx, 10)),
 		sdk.NewAttribute("max_sales_per_block_per_loja", strconv.FormatUint(uint64(req.Params.MaxSalesPerBlockPerLoja), 10)),
 		sdk.NewAttribute("limits_enabled", strconv.FormatBool(req.Params.LimitsEnabled)),
 		sdk.NewAttribute("cashback_daily_retention_days", strconv.FormatUint(uint64(req.Params.CashbackDailyRetentionDays), 10)),
@@ -64,10 +64,10 @@ func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams)
 	emitDiff("faucet_enabled", strconv.FormatBool(current.FaucetEnabled), strconv.FormatBool(req.Params.FaucetEnabled))
 	emitDiff("faucet_admin", current.FaucetAdmin, req.Params.FaucetAdmin)
 	emitDiff("faucet_max_per_tx", current.FaucetMaxPerTx, req.Params.FaucetMaxPerTx)
-	emitDiff("cashback_rate_micro_byx_per_real", strconv.FormatUint(current.CashbackRateMicroByxPerReal, 10), strconv.FormatUint(req.Params.CashbackRateMicroByxPerReal, 10))
+	emitDiff("cashback_rate_ubyx_per_real", strconv.FormatUint(current.CashbackRateUbyxPerReal, 10), strconv.FormatUint(req.Params.CashbackRateUbyxPerReal, 10))
 	emitDiff("max_valor_venda_em_centavos", strconv.FormatUint(current.MaxValorVendaEmCentavos, 10), strconv.FormatUint(req.Params.MaxValorVendaEmCentavos, 10))
-	emitDiff("max_cashback_micro_byx_por_venda", strconv.FormatUint(current.MaxCashbackMicroByxPorVenda, 10), strconv.FormatUint(req.Params.MaxCashbackMicroByxPorVenda, 10))
-	emitDiff("max_cashback_daily_per_loja_microbyx", strconv.FormatUint(current.MaxCashbackDailyPerLojaMicrobyx, 10), strconv.FormatUint(req.Params.MaxCashbackDailyPerLojaMicrobyx, 10))
+	emitDiff("max_cashback_ubyx_por_venda", strconv.FormatUint(current.MaxCashbackUbyxPorVenda, 10), strconv.FormatUint(req.Params.MaxCashbackUbyxPorVenda, 10))
+	emitDiff("max_cashback_daily_per_loja_ubyx", strconv.FormatUint(current.MaxCashbackDailyPerLojaUbyx, 10), strconv.FormatUint(req.Params.MaxCashbackDailyPerLojaUbyx, 10))
 	emitDiff("max_sales_per_block_per_loja", strconv.FormatUint(uint64(current.MaxSalesPerBlockPerLoja), 10), strconv.FormatUint(uint64(req.Params.MaxSalesPerBlockPerLoja), 10))
 	emitDiff("limits_enabled", strconv.FormatBool(current.LimitsEnabled), strconv.FormatBool(req.Params.LimitsEnabled))
 	emitDiff("cashback_daily_retention_days", strconv.FormatUint(uint64(current.CashbackDailyRetentionDays), 10), strconv.FormatUint(uint64(req.Params.CashbackDailyRetentionDays), 10))

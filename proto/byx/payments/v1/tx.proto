@@ -70,7 +70,8 @@ message MsgCreatePaymentRequest {
 
   string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   uint64 loja_id = 2;
-  uint64 amount_microbyx = 3;
+  // Valor do pedido em ubyx, unidade mínima on-chain.
+  uint64 amount_ubyx = 3;
   string memo = 4;
   uint64 expires_in_seconds = 5;
 }

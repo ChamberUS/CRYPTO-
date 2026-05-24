@@ -98,7 +98,12 @@ func (k msgServer) Faucet(goCtx context.Context, msg *types.MsgFaucet) (*types.M
 		return nil, status.Error(codes.InvalidArgument, "endereço operacional do lojista inválido")
 	}
 
-	// 7) Somar saldo (string -> Int -> soma -> string)
+	// 7) Crédito em BYX para o destinatário via reserva pré-existente do módulo.
+	if err := k.TransferBYXFromReserve(ctx, lojistaAddr, amt); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// 8) Somar saldo (string -> Int -> soma -> string)
 	saldo, ok := sdkmath.NewIntFromString(lojista.Saldo)
 	if !ok {
 		saldo = sdkmath.ZeroInt()
@@ -108,12 +113,6 @@ func (k msgServer) Faucet(goCtx context.Context, msg *types.MsgFaucet) (*types.M
 
 	if err := k.SetMerchant(ctx, lojista); err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "falha ao salvar lojista")
-	}
-
-	// 8) Crédito em BYX para o destinatário via helper centralizado
-	if err := k.MintBYXTo(ctx, lojistaAddr, amt); err != nil {
-		// Traduzir erro interno em erro gRPC
-		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	// 9) Evento para indexação/log

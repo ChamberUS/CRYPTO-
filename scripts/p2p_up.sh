@@ -5,7 +5,7 @@ HOME_VAL=${HOME_VAL:-$HOME/.byx-validator}
 HOME_SENTRY=${HOME_SENTRY:-$HOME/.byx-sentry}
 HOME_RPC=${HOME_RPC:-$HOME/.byx-rpc}
 LOG_DIR=${LOG_DIR:-/tmp}
-MIN_GAS_PRICES=${MIN_GAS_PRICES:-0.025byx}
+MIN_GAS_PRICES=${MIN_GAS_PRICES:-0.025ubyx}
 
 start_node() {
   local home=$1

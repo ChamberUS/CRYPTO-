@@ -32,14 +32,14 @@ type Params struct {
 	FaucetEnabled bool `protobuf:"varint,2,opt,name=faucet_enabled,json=faucetEnabled,proto3" json:"faucet_enabled,omitempty"`
 	// Limite por transação do faucet (Int em string, ex "1000")
 	FaucetMaxPerTx string `protobuf:"bytes,3,opt,name=faucet_max_per_tx,json=faucetMaxPerTx,proto3" json:"faucet_max_per_tx,omitempty"`
-	// Cashback em micro BYX por real gasto (ex.: 2500 = 0.0025 BYX/R$1)
-	CashbackRateMicroByxPerReal uint64 `protobuf:"varint,4,opt,name=cashback_rate_micro_byx_per_real,json=cashbackRateMicroByxPerReal,proto3" json:"cashback_rate_micro_byx_per_real,omitempty"`
+	// Cashback em ubyx por real gasto (ex.: 2500 = 0.0025 BYX/R$1)
+	CashbackRateUbyxPerReal uint64 `protobuf:"varint,4,opt,name=cashback_rate_ubyx_per_real,json=cashbackRateUbyxPerReal,proto3" json:"cashback_rate_ubyx_per_real,omitempty"`
 	// Limite máximo de valor de venda em centavos (anti-abuso)
 	MaxValorVendaEmCentavos uint64 `protobuf:"varint,5,opt,name=max_valor_venda_em_centavos,json=maxValorVendaEmCentavos,proto3" json:"max_valor_venda_em_centavos,omitempty"`
-	// Limite máximo de cashback por venda em micro BYX
-	MaxCashbackMicroByxPorVenda uint64 `protobuf:"varint,6,opt,name=max_cashback_micro_byx_por_venda,json=maxCashbackMicroByxPorVenda,proto3" json:"max_cashback_micro_byx_por_venda,omitempty"`
-	// Limite diário de cashback por loja (micro BYX)
-	MaxCashbackDailyPerLojaMicrobyx uint64 `protobuf:"varint,7,opt,name=max_cashback_daily_per_loja_microbyx,json=maxCashbackDailyPerLojaMicrobyx,proto3" json:"max_cashback_daily_per_loja_microbyx,omitempty"`
+	// Limite máximo de cashback por venda em ubyx
+	MaxCashbackUbyxPorVenda uint64 `protobuf:"varint,6,opt,name=max_cashback_ubyx_por_venda,json=maxCashbackUbyxPorVenda,proto3" json:"max_cashback_ubyx_por_venda,omitempty"`
+	// Limite diário de cashback por loja (ubyx)
+	MaxCashbackDailyPerLojaUbyx uint64 `protobuf:"varint,7,opt,name=max_cashback_daily_per_loja_ubyx,json=maxCashbackDailyPerLojaUbyx,proto3" json:"max_cashback_daily_per_loja_ubyx,omitempty"`
 	// Limite de vendas por bloco por loja
 	MaxSalesPerBlockPerLoja uint32 `protobuf:"varint,8,opt,name=max_sales_per_block_per_loja,json=maxSalesPerBlockPerLoja,proto3" json:"max_sales_per_block_per_loja,omitempty"`
 	// Habilita/desabilita verificações de limite
@@ -102,9 +102,9 @@ func (m *Params) GetFaucetMaxPerTx() string {
 	return ""
 }
 
-func (m *Params) GetCashbackRateMicroByxPerReal() uint64 {
+func (m *Params) GetCashbackRateUbyxPerReal() uint64 {
 	if m != nil {
-		return m.CashbackRateMicroByxPerReal
+		return m.CashbackRateUbyxPerReal
 	}
 	return 0
 }
@@ -116,16 +116,16 @@ func (m *Params) GetMaxValorVendaEmCentavos() uint64 {
 	return 0
 }
 
-func (m *Params) GetMaxCashbackMicroByxPorVenda() uint64 {
+func (m *Params) GetMaxCashbackUbyxPorVenda() uint64 {
 	if m != nil {
-		return m.MaxCashbackMicroByxPorVenda
+		return m.MaxCashbackUbyxPorVenda
 	}
 	return 0
 }
 
-func (m *Params) GetMaxCashbackDailyPerLojaMicrobyx() uint64 {
+func (m *Params) GetMaxCashbackDailyPerLojaUbyx() uint64 {
 	if m != nil {
-		return m.MaxCashbackDailyPerLojaMicrobyx
+		return m.MaxCashbackDailyPerLojaUbyx
 	}
 	return 0
 }
@@ -231,13 +231,13 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x40
 	}
-	if m.MaxCashbackDailyPerLojaMicrobyx != 0 {
-		i = encodeVarintParams(dAtA, i, uint64(m.MaxCashbackDailyPerLojaMicrobyx))
+	if m.MaxCashbackDailyPerLojaUbyx != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxCashbackDailyPerLojaUbyx))
 		i--
 		dAtA[i] = 0x38
 	}
-	if m.MaxCashbackMicroByxPorVenda != 0 {
-		i = encodeVarintParams(dAtA, i, uint64(m.MaxCashbackMicroByxPorVenda))
+	if m.MaxCashbackUbyxPorVenda != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxCashbackUbyxPorVenda))
 		i--
 		dAtA[i] = 0x30
 	}
@@ -246,8 +246,8 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x28
 	}
-	if m.CashbackRateMicroByxPerReal != 0 {
-		i = encodeVarintParams(dAtA, i, uint64(m.CashbackRateMicroByxPerReal))
+	if m.CashbackRateUbyxPerReal != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.CashbackRateUbyxPerReal))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -306,17 +306,17 @@ func (m *Params) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovParams(uint64(l))
 	}
-	if m.CashbackRateMicroByxPerReal != 0 {
-		n += 1 + sovParams(uint64(m.CashbackRateMicroByxPerReal))
+	if m.CashbackRateUbyxPerReal != 0 {
+		n += 1 + sovParams(uint64(m.CashbackRateUbyxPerReal))
 	}
 	if m.MaxValorVendaEmCentavos != 0 {
 		n += 1 + sovParams(uint64(m.MaxValorVendaEmCentavos))
 	}
-	if m.MaxCashbackMicroByxPorVenda != 0 {
-		n += 1 + sovParams(uint64(m.MaxCashbackMicroByxPorVenda))
+	if m.MaxCashbackUbyxPorVenda != 0 {
+		n += 1 + sovParams(uint64(m.MaxCashbackUbyxPorVenda))
 	}
-	if m.MaxCashbackDailyPerLojaMicrobyx != 0 {
-		n += 1 + sovParams(uint64(m.MaxCashbackDailyPerLojaMicrobyx))
+	if m.MaxCashbackDailyPerLojaUbyx != 0 {
+		n += 1 + sovParams(uint64(m.MaxCashbackDailyPerLojaUbyx))
 	}
 	if m.MaxSalesPerBlockPerLoja != 0 {
 		n += 1 + sovParams(uint64(m.MaxSalesPerBlockPerLoja))
@@ -451,9 +451,9 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CashbackRateMicroByxPerReal", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CashbackRateUbyxPerReal", wireType)
 			}
-			m.CashbackRateMicroByxPerReal = 0
+			m.CashbackRateUbyxPerReal = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowParams
@@ -463,7 +463,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CashbackRateMicroByxPerReal |= uint64(b&0x7F) << shift
+				m.CashbackRateUbyxPerReal |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -489,9 +489,9 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			}
 		case 6:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxCashbackMicroByxPorVenda", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxCashbackUbyxPorVenda", wireType)
 			}
-			m.MaxCashbackMicroByxPorVenda = 0
+			m.MaxCashbackUbyxPorVenda = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowParams
@@ -501,16 +501,16 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaxCashbackMicroByxPorVenda |= uint64(b&0x7F) << shift
+				m.MaxCashbackUbyxPorVenda |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 7:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxCashbackDailyPerLojaMicrobyx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxCashbackDailyPerLojaUbyx", wireType)
 			}
-			m.MaxCashbackDailyPerLojaMicrobyx = 0
+			m.MaxCashbackDailyPerLojaUbyx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowParams
@@ -520,7 +520,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MaxCashbackDailyPerLojaMicrobyx |= uint64(b&0x7F) << shift
+				m.MaxCashbackDailyPerLojaUbyx |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

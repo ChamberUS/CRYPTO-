@@ -58,11 +58,11 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 	if params.MaxValorVendaEmCentavos == 0 {
 		params.MaxValorVendaEmCentavos = defaults.MaxValorVendaEmCentavos
 	}
-	if params.MaxCashbackMicroByxPorVenda == 0 {
-		params.MaxCashbackMicroByxPorVenda = defaults.MaxCashbackMicroByxPorVenda
+	if params.MaxCashbackUbyxPorVenda == 0 {
+		params.MaxCashbackUbyxPorVenda = defaults.MaxCashbackUbyxPorVenda
 	}
-	if params.MaxCashbackDailyPerLojaMicrobyx == 0 {
-		params.MaxCashbackDailyPerLojaMicrobyx = defaults.MaxCashbackDailyPerLojaMicrobyx
+	if params.MaxCashbackDailyPerLojaUbyx == 0 {
+		params.MaxCashbackDailyPerLojaUbyx = defaults.MaxCashbackDailyPerLojaUbyx
 	}
 	if params.MaxSalesPerBlockPerLoja == 0 {
 		params.MaxSalesPerBlockPerLoja = defaults.MaxSalesPerBlockPerLoja
@@ -97,7 +97,7 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 	cashbackAmount := cashbackCoin.Amount
 
 	// Aplica limite máximo de cashback por venda.
-	maxCashbackPerSale := sdkmath.NewIntFromUint64(params.MaxCashbackMicroByxPorVenda)
+	maxCashbackPerSale := sdkmath.NewIntFromUint64(params.MaxCashbackUbyxPorVenda)
 	if cashbackAmount.GT(maxCashbackPerSale) {
 		cashbackAmount = maxCashbackPerSale
 	}
@@ -131,7 +131,7 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 		}
 
 		// Limite diário de cashback por loja
-		if params.MaxCashbackDailyPerLojaMicrobyx > 0 && cashbackAmount.IsPositive() {
+		if params.MaxCashbackDailyPerLojaUbyx > 0 && cashbackAmount.IsPositive() {
 			todayKey := dayKey(ctx.BlockTime())
 			pair := collections.Join(lojaIDUint, todayKey)
 			total, err := m.DailyCashbackByLoja.Get(ctx, pair)
@@ -142,7 +142,7 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 				total = 0
 			}
 			next := total + cashbackMicro
-			if next > params.MaxCashbackDailyPerLojaMicrobyx {
+			if next > params.MaxCashbackDailyPerLojaUbyx {
 				return nil, errorsmod.Wrap(types.ErrDailyLimitExceeded, "limite diário de cashback excedido")
 			}
 			if err := m.DailyCashbackByLoja.Set(ctx, pair, next); err != nil {
@@ -172,14 +172,14 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 	}
 
 	sale := types.Sale{
-		Id:               saleID,
-		LojaId:           lojaIDUint,
-		Creator:          msg.Creator,
-		ValorEmCentavos:  msg.ValorEmCentavos,
-		Cliente:          msg.Cliente,
-		CashbackMicroByx: cashbackMicro,
-		Timestamp:        ctx.BlockTime().UTC().Format(time.RFC3339),
-		BlockTime:        uint64(ctx.BlockTime().UTC().Unix()),
+		Id:              saleID,
+		LojaId:          lojaIDUint,
+		Creator:         msg.Creator,
+		ValorEmCentavos: msg.ValorEmCentavos,
+		Cliente:         msg.Cliente,
+		CashbackUbyx:    cashbackMicro,
+		Timestamp:       ctx.BlockTime().UTC().Format(time.RFC3339),
+		BlockTime:       uint64(ctx.BlockTime().UTC().Unix()),
 	}
 
 	if err := m.storeSale(ctx, sale); err != nil {
@@ -193,13 +193,13 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 				sdk.NewAttribute("sale_id", strconv.FormatUint(saleID, 10)),
 				sdk.NewAttribute("loja_id", msg.LojaId),
 				sdk.NewAttribute("valor_em_centavos", strconv.FormatUint(msg.ValorEmCentavos, 10)),
-				sdk.NewAttribute("cashback_micro_byx", cashbackAmount.String()),
+				sdk.NewAttribute("cashback_ubyx", cashbackAmount.String()),
 				sdk.NewAttribute("cliente", msg.Cliente),
 				sdk.NewAttribute("creator", msg.Creator),
 			),
 		)
 		return &types.MsgRegistrarVendaResponse{
-			CashbackMicroByx: cashbackMicro,
+			CashbackUbyx: cashbackMicro,
 		}, nil
 	}
 
@@ -209,7 +209,7 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 			sdk.NewAttribute("sale_id", strconv.FormatUint(saleID, 10)),
 			sdk.NewAttribute("loja_id", msg.LojaId),
 			sdk.NewAttribute("valor_em_centavos", strconv.FormatUint(msg.ValorEmCentavos, 10)),
-			sdk.NewAttribute("cashback_micro_byx", cashbackAmount.String()),
+			sdk.NewAttribute("cashback_ubyx", cashbackAmount.String()),
 			sdk.NewAttribute("cliente", msg.Cliente),
 			sdk.NewAttribute("creator", msg.Creator),
 		),
@@ -217,6 +217,6 @@ func (m msgServer) RegistrarVenda(goCtx context.Context, msg *types.MsgRegistrar
 
 	// 9) Resposta com o valor de cashback creditado
 	return &types.MsgRegistrarVendaResponse{
-		CashbackMicroByx: cashbackMicro,
+		CashbackUbyx: cashbackMicro,
 	}, nil
 }

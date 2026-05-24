@@ -15,20 +15,21 @@ message Params {
   // Liga/desliga o faucet no módulo
   bool   faucet_enabled    = 2;
 
-  // Limite por transação do faucet (Int em string, ex "1000")
+  // Limite por transação do faucet em ubyx (Int em string, ex "1000000000" = 1000 BYX)
   string faucet_max_per_tx = 3;
 
-  // Cashback em micro BYX por real gasto (ex.: 2500 = 0.0025 BYX/R$1)
-  uint64 cashback_rate_micro_byx_per_real = 4;
+  // Taxa de cashback em ubyx por R$1.
+  // Ex.: 2500 = 0.0025 BYX/R$1 = 2500 ubyx/R$1.
+  uint64 cashback_rate_ubyx_per_real = 4;
 
   // Limite máximo de valor de venda em centavos (anti-abuso)
   uint64 max_valor_venda_em_centavos = 5;
 
-  // Limite máximo de cashback por venda em micro BYX
-  uint64 max_cashback_micro_byx_por_venda = 6;
+  // Limite máximo de cashback por venda em ubyx.
+  uint64 max_cashback_ubyx_por_venda = 6;
 
-  // Limite diário de cashback por loja (micro BYX)
-  uint64 max_cashback_daily_per_loja_microbyx = 7;
+  // Limite diário de cashback por loja em ubyx.
+  uint64 max_cashback_daily_per_loja_ubyx = 7;
 
   // Limite de vendas por bloco por loja
   uint32 max_sales_per_block_per_loja = 8;

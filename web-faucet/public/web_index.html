@@ -78,6 +78,13 @@
 
   const toHex = (u8) => [...new Uint8Array(u8)].map(b => b.toString(16).padStart(2,'0')).join('');
   const log = (id, obj) => document.getElementById(id).textContent = JSON.stringify(obj, null, 2);
+  const parseByxToUbyx = (value) => {
+    const normalized = String(value ?? "").trim().replace(",", ".");
+    if (!/^\d+(\.\d{1,6})?$/.test(normalized)) throw new Error("Use BYX com até 6 casas decimais");
+    const [whole, fraction = ""] = normalized.split(".");
+    const combined = `${whole}${fraction.padEnd(6, "0")}`;
+    return combined.replace(/^0+(?=\d)/, "") || "0";
+  };
 
   // Mapeamento Amino das mensagens do seu módulo
   const amino = new AminoTypes({
@@ -117,9 +124,9 @@
             bech32PrefixConsAddr:"byxvalcons",
             bech32PrefixConsPub: "byxvalconspub",
           },
-          currencies:    [{ coinDenom:"BYX", coinMinimalDenom:"byx", coinDecimals:0 }],
-          feeCurrencies: [{ coinDenom:"BYX", coinMinimalDenom:"byx", coinDecimals:0, gasPriceStep:{ low:0, average:0, high:0 } }],
-          stakeCurrency: { coinDenom:"BYX", coinMinimalDenom:"byx", coinDecimals:0 },
+          currencies:    [{ coinDenom:"BYX", coinMinimalDenom:"ubyx", coinDecimals:6 }],
+          feeCurrencies: [{ coinDenom:"BYX", coinMinimalDenom:"ubyx", coinDecimals:6, gasPriceStep:{ low:0, average:0, high:0 } }],
+          stakeCurrency: { coinDenom:"BYX", coinMinimalDenom:"ubyx", coinDecimals:6 },
           features: ["stargate","no-legacy-stdTx"],
         });
         await window.keplr.enable(chain);
@@ -130,7 +137,7 @@
       const [acc] = await signer.getAccounts();
       const addr = acc?.address;
 
-      const gasPrice = GasPrice.fromString("0byx");
+      const gasPrice = GasPrice.fromString("0ubyx");
       const client   = await SigningStargateClient.connectWithSigner(rpc, signer, { prefix:"byx", aminoTypes:amino, gasPrice });
       const stargate = await StargateClient.connect(rpc);
 
@@ -180,7 +187,7 @@
 
       const fromId = parseInt(document.getElementById("trFrom").value, 10);
       const toId   = parseInt(document.getElementById("trTo").value, 10);
-      const valor  = document.getElementById("trVal").value.trim();
+      const valorUbyx  = parseByxToUbyx(document.getElementById("trVal").value.trim());
 
       const msg = {
         typeUrl: "/byx.lojas.v1.MsgTransferirByx",
@@ -188,7 +195,7 @@
           creator: s.addr,
           deLojistaId: fromId,
           paraLojistaId: toId,
-          valor: valor,
+          valor: valorUbyx,
         },
       };
 

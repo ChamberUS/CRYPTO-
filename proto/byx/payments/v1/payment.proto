@@ -19,7 +19,8 @@ enum PaymentStatus {
 message PaymentRequest {
   uint64 id = 1;
   uint64 loja_id = 2;
-  uint64 amount_microbyx = 3;
+  // Valor do pedido em ubyx, unidade mínima on-chain.
+  uint64 amount_ubyx = 3;
   string memo = 4;
   PaymentStatus status = 5;
   uint64 created_at_unix = 6;

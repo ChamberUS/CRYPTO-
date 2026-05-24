@@ -4,7 +4,7 @@ set -euo pipefail
 # Inicializa perfis locais: validator, sentry, rpc-fullnode
 
 CHAIN_ID=${CHAIN_ID:-byx-testnet-1}
-DENOM=${DENOM:-byx}
+DENOM=${DENOM:-ubyx}
 MONIKER_VALIDATOR=${MONIKER_VALIDATOR:-byx-validator}
 MONIKER_SENTRY=${MONIKER_SENTRY:-byx-sentry}
 MONIKER_RPC=${MONIKER_RPC:-byx-rpc}
@@ -17,7 +17,7 @@ HOME_RPC=${HOME_RPC:-$HOME/.byx-rpc}
 PEX_VAL=${PEX_VAL:-0}
 PEX_SENTRY=${PEX_SENTRY:-1}
 PEX_RPC=${PEX_RPC:-0}
-MIN_GAS_PRICES=${MIN_GAS_PRICES:-0.025byx}
+MIN_GAS_PRICES=${MIN_GAS_PRICES:-0.025ubyx}
 
 echo "📦 Init profiles with CHAIN_ID=${CHAIN_ID} MIN_GAS_PRICES=${MIN_GAS_PRICES}"
 

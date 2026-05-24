@@ -32,10 +32,10 @@ func TestRegistrarVenda_DailyLimitExceeded(t *testing.T) {
 
 	params := types.DefaultParams()
 	params.LimitsEnabled = true
-	params.MaxCashbackDailyPerLojaMicrobyx = 5
-	params.MaxCashbackMicroByxPorVenda = 500
+	params.MaxCashbackDailyPerLojaUbyx = 5
+	params.MaxCashbackUbyxPorVenda = 500
 	params.MaxSalesPerBlockPerLoja = 5
-	params.CashbackRateMicroByxPerReal = 10
+	params.CashbackRateUbyxPerReal = 10
 	require.NoError(t, f.keeper.ParamsStore.Set(sdkCtx, params))
 
 	// cashback calculado será > limite diário e deve falhar antes do mint

@@ -9,8 +9,12 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
-	// Denom padrão da BYX
-	DenomBYX = "byx"
+	// BaseDenom é a unidade mínima on-chain da BYX.
+	BaseDenom = "ubyx"
+	// DisplayDenom é a unidade exibida para humanos.
+	DisplayDenom = "BYX"
+	// DenomBYX mantém compatibilidade com o código existente, apontando para a unidade base.
+	DenomBYX = BaseDenom
 	// GovModuleName duplicates the gov module's name to avoid a dependency with x/gov.
 	// It should be synced with the gov module's name if it is ever changed.
 	// See: https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/gov/types/keys.go#L9

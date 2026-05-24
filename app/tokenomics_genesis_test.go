@@ -43,11 +43,10 @@ func TestGenesisTokenomicsSupplyCapAndMintDisabled(t *testing.T) {
 			break
 		}
 	}
-	require.Equal(t, "1000000000", byxSupply)
-	require.Equal(t, "byx", genesis.AppState.Mint.Params.MintDenom)
+	require.Equal(t, "1000000000000000", byxSupply)
+	require.Equal(t, types.BaseDenom, genesis.AppState.Mint.Params.MintDenom)
 	require.Equal(t, "0.000000000000000000", genesis.AppState.Mint.Minter.Inflation)
 	require.Equal(t, "0.000000000000000000", genesis.AppState.Mint.Params.InflationRateChange)
 	require.Equal(t, "0.000000000000000000", genesis.AppState.Mint.Params.InflationMax)
 	require.Equal(t, "0.000000000000000000", genesis.AppState.Mint.Params.InflationMin)
 }
-

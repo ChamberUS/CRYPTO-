@@ -128,7 +128,7 @@ func (q queryServer) PaymentsQRCode(ctx context.Context, req *types.QueryPayment
 	payloadBz, err := json.Marshal(qrPayload{
 		T:   "byxpay",
 		RID: strconv.FormatUint(pr.Id, 10),
-		Amt: strconv.FormatUint(pr.AmountMicrobyx, 10),
+		Amt: strconv.FormatUint(pr.AmountUbyx, 10),
 		MID: pr.LojaId,
 		To:  merchant.Creator,
 	})
@@ -138,7 +138,7 @@ func (q queryServer) PaymentsQRCode(ctx context.Context, req *types.QueryPayment
 
 	return &types.QueryPaymentsQRCodeResponse{
 		RequestId:              strconv.FormatUint(pr.Id, 10),
-		AmountMicrobyx:         pr.AmountMicrobyx,
+		AmountUbyx:             pr.AmountUbyx,
 		MerchantId:             pr.LojaId,
 		MerchantOwner:          merchant.Creator,
 		SuggestedCertificateId: req.SuggestedCertificateId,

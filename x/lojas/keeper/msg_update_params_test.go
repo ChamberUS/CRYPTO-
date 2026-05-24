@@ -41,9 +41,9 @@ func TestMsgUpdateParams(t *testing.T) {
 			input: &types.MsgUpdateParams{
 				Authority: authorityStr,
 				Params: types.Params{
-					FaucetEnabled:               true,
-					MaxValorVendaEmCentavos:     0, // invalid
-					MaxCashbackMicroByxPorVenda: 0,
+					FaucetEnabled:           true,
+					MaxValorVendaEmCentavos: 0, // invalid
+					MaxCashbackUbyxPorVenda: 0,
 				},
 			},
 			expErr:    true,

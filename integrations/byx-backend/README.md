@@ -4,6 +4,7 @@ API minima para teste fechado do app BYX. Este servico e **somente DEVNET / TEST
 Nao use esta API em mainnet, ambiente publico ou fluxo financeiro real.
 
 O app mobile/web deve chamar esta API, nao o RPC `26657` diretamente. O backend acessa a chain via `byxd` local usando `BYX_NODE_RPC`, `CHAIN_ID`, `BYXD_HOME` e `KEYRING_BACKEND`.
+Unidade monetaria: base on-chain `ubyx`, display `BYX`, com `1 BYX = 1_000_000 ubyx`.
 Compatibilidade temporaria: se `BYX_NODE_RPC` nao existir, ele tenta `BYXD_NODE` e por ultimo `NODE`, mas rejeita qualquer valor que nao comece com `tcp://`, `http://` ou `https://`.
 
 ## Seguranca
@@ -36,11 +37,13 @@ Criar payment request:
 ```json
 {
   "loja_id": 1,
-  "amount_microbyx": 2000,
+  "amount_ubyx": 2000,
   "memo": "pedido fechado",
   "expires_in_seconds": 300
 }
 ```
+
+`amount_ubyx` representa a unidade minima on-chain `ubyx`.
 
 Pagar payment request em devnet:
 

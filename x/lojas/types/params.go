@@ -11,16 +11,16 @@ import (
 // NewParams cria um Params preenchendo os 3 campos do faucet.
 func NewParams(admin string, enabled bool, maxPerTx string) Params {
 	return Params{
-		FaucetAdmin:                     admin,
-		FaucetEnabled:                   enabled,
-		FaucetMaxPerTx:                  maxPerTx,
-		CashbackRateMicroByxPerReal:     2500,
-		MaxValorVendaEmCentavos:         1_000_000,
-		MaxCashbackMicroByxPorVenda:     100_000,
-		MaxCashbackDailyPerLojaMicrobyx: 5_000_000,
-		MaxSalesPerBlockPerLoja:         20,
-		LimitsEnabled:                   true,
-		CashbackDailyRetentionDays:      90,
+		FaucetAdmin:                 admin,
+		FaucetEnabled:               enabled,
+		FaucetMaxPerTx:              maxPerTx,
+		CashbackRateUbyxPerReal:     2500,
+		MaxValorVendaEmCentavos:     1_000_000,
+		MaxCashbackUbyxPorVenda:     100_000,
+		MaxCashbackDailyPerLojaUbyx: 5_000_000,
+		MaxSalesPerBlockPerLoja:     20,
+		LimitsEnabled:               true,
+		CashbackDailyRetentionDays:  90,
 	}
 }
 
@@ -28,16 +28,16 @@ func NewParams(admin string, enabled bool, maxPerTx string) Params {
 func DefaultParams() Params {
 	return Params{
 		// Safe-by-default: faucet desabilitado até configuração explícita.
-		FaucetAdmin:                     "",
-		FaucetEnabled:                   false,
-		FaucetMaxPerTx:                  "1000", // ex.: 1000 BYX por tx
-		CashbackRateMicroByxPerReal:     2500,   // 0.0025 BYX por R$1 (micro BYX)
-		MaxValorVendaEmCentavos:         1_000_000,
-		MaxCashbackMicroByxPorVenda:     100_000,
-		MaxCashbackDailyPerLojaMicrobyx: 5_000_000,
-		MaxSalesPerBlockPerLoja:         20,
-		LimitsEnabled:                   true,
-		CashbackDailyRetentionDays:      90,
+		FaucetAdmin:                 "",
+		FaucetEnabled:               false,
+		FaucetMaxPerTx:              "1000000000", // 1000 BYX por tx em ubyx (1000 * 1_000_000)
+		CashbackRateUbyxPerReal:     2500,         // legado de proto: "ubyx" aqui equivale a ubyx
+		MaxValorVendaEmCentavos:     1_000_000,
+		MaxCashbackUbyxPorVenda:     100_000,
+		MaxCashbackDailyPerLojaUbyx: 5_000_000,
+		MaxSalesPerBlockPerLoja:     20,
+		LimitsEnabled:               true,
+		CashbackDailyRetentionDays:  90,
 	}
 }
 
@@ -58,20 +58,20 @@ func (p Params) Validate() error {
 		}
 	}
 
-	if p.CashbackRateMicroByxPerReal == 0 || p.CashbackRateMicroByxPerReal > 1_000_000 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "cashback_rate_micro_byx_per_real muito alto: %d", p.CashbackRateMicroByxPerReal)
+	if p.CashbackRateUbyxPerReal == 0 || p.CashbackRateUbyxPerReal > 1_000_000 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "cashback_rate_ubyx_per_real muito alto: %d", p.CashbackRateUbyxPerReal)
 	}
 
 	if p.MaxValorVendaEmCentavos == 0 || p.MaxValorVendaEmCentavos > 10_000_000 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "max_valor_venda_em_centavos fora do intervalo: %d", p.MaxValorVendaEmCentavos)
 	}
 
-	if p.MaxCashbackMicroByxPorVenda == 0 || p.MaxCashbackMicroByxPorVenda > 1_000_000 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "max_cashback_micro_byx_por_venda fora do intervalo: %d", p.MaxCashbackMicroByxPorVenda)
+	if p.MaxCashbackUbyxPorVenda == 0 || p.MaxCashbackUbyxPorVenda > 1_000_000 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "max_cashback_ubyx_por_venda fora do intervalo: %d", p.MaxCashbackUbyxPorVenda)
 	}
 
-	if p.MaxCashbackDailyPerLojaMicrobyx > 100_000_000_000 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "max_cashback_daily_per_loja_microbyx fora do intervalo: %d", p.MaxCashbackDailyPerLojaMicrobyx)
+	if p.MaxCashbackDailyPerLojaUbyx > 100_000_000_000 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "max_cashback_daily_per_loja_ubyx fora do intervalo: %d", p.MaxCashbackDailyPerLojaUbyx)
 	}
 
 	if p.MaxSalesPerBlockPerLoja > 10_000 {
@@ -99,10 +99,10 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair([]byte("FaucetAdmin"), &p.FaucetAdmin, validateStringNotNil),
 		paramtypes.NewParamSetPair([]byte("FaucetEnabled"), &p.FaucetEnabled, validateBool),
 		paramtypes.NewParamSetPair([]byte("FaucetMaxPerTx"), &p.FaucetMaxPerTx, validateStringNotNil),
-		paramtypes.NewParamSetPair([]byte("CashbackRateMicroByxPerReal"), &p.CashbackRateMicroByxPerReal, validateUint64Positive),
+		paramtypes.NewParamSetPair([]byte("CashbackRateUbyxPerReal"), &p.CashbackRateUbyxPerReal, validateUint64Positive),
 		paramtypes.NewParamSetPair([]byte("MaxValorVendaEmCentavos"), &p.MaxValorVendaEmCentavos, validateUint64Positive),
-		paramtypes.NewParamSetPair([]byte("MaxCashbackMicroByxPorVenda"), &p.MaxCashbackMicroByxPorVenda, validateUint64Positive),
-		paramtypes.NewParamSetPair([]byte("MaxCashbackDailyPerLojaMicrobyx"), &p.MaxCashbackDailyPerLojaMicrobyx, validateUint64Positive),
+		paramtypes.NewParamSetPair([]byte("MaxCashbackUbyxPorVenda"), &p.MaxCashbackUbyxPorVenda, validateUint64Positive),
+		paramtypes.NewParamSetPair([]byte("MaxCashbackDailyPerLojaUbyx"), &p.MaxCashbackDailyPerLojaUbyx, validateUint64Positive),
 		paramtypes.NewParamSetPair([]byte("MaxSalesPerBlockPerLoja"), &p.MaxSalesPerBlockPerLoja, validateUint32Positive),
 		paramtypes.NewParamSetPair([]byte("LimitsEnabled"), &p.LimitsEnabled, validateBool),
 		paramtypes.NewParamSetPair([]byte("CashbackDailyRetentionDays"), &p.CashbackDailyRetentionDays, validateUint32Positive),

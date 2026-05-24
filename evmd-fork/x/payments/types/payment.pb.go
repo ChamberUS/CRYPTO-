@@ -61,15 +61,15 @@ func (PaymentStatus) EnumDescriptor() ([]byte, []int) {
 
 // PaymentRequest representa um pedido de pagamento criado por uma loja.
 type PaymentRequest struct {
-	Id             uint64        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	LojaId         uint64        `protobuf:"varint,2,opt,name=loja_id,json=lojaId,proto3" json:"loja_id,omitempty"`
-	AmountMicrobyx uint64        `protobuf:"varint,3,opt,name=amount_microbyx,json=amountMicrobyx,proto3" json:"amount_microbyx,omitempty"`
-	Memo           string        `protobuf:"bytes,4,opt,name=memo,proto3" json:"memo,omitempty"`
-	Status         PaymentStatus `protobuf:"varint,5,opt,name=status,proto3,enum=byx.payments.v1.PaymentStatus" json:"status,omitempty"`
-	CreatedAtUnix  uint64        `protobuf:"varint,6,opt,name=created_at_unix,json=createdAtUnix,proto3" json:"created_at_unix,omitempty"`
-	ExpiresAtUnix  uint64        `protobuf:"varint,7,opt,name=expires_at_unix,json=expiresAtUnix,proto3" json:"expires_at_unix,omitempty"`
-	Payer          string        `protobuf:"bytes,8,opt,name=payer,proto3" json:"payer,omitempty"`
-	PaidAtUnix     uint64        `protobuf:"varint,9,opt,name=paid_at_unix,json=paidAtUnix,proto3" json:"paid_at_unix,omitempty"`
+	Id            uint64        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	LojaId        uint64        `protobuf:"varint,2,opt,name=loja_id,json=lojaId,proto3" json:"loja_id,omitempty"`
+	AmountUbyx    uint64        `protobuf:"varint,3,opt,name=amount_ubyx,json=amountUbyx,proto3" json:"amount_ubyx,omitempty"`
+	Memo          string        `protobuf:"bytes,4,opt,name=memo,proto3" json:"memo,omitempty"`
+	Status        PaymentStatus `protobuf:"varint,5,opt,name=status,proto3,enum=byx.payments.v1.PaymentStatus" json:"status,omitempty"`
+	CreatedAtUnix uint64        `protobuf:"varint,6,opt,name=created_at_unix,json=createdAtUnix,proto3" json:"created_at_unix,omitempty"`
+	ExpiresAtUnix uint64        `protobuf:"varint,7,opt,name=expires_at_unix,json=expiresAtUnix,proto3" json:"expires_at_unix,omitempty"`
+	Payer         string        `protobuf:"bytes,8,opt,name=payer,proto3" json:"payer,omitempty"`
+	PaidAtUnix    uint64        `protobuf:"varint,9,opt,name=paid_at_unix,json=paidAtUnix,proto3" json:"paid_at_unix,omitempty"`
 }
 
 func (m *PaymentRequest) Reset()         { *m = PaymentRequest{} }
@@ -119,9 +119,9 @@ func (m *PaymentRequest) GetLojaId() uint64 {
 	return 0
 }
 
-func (m *PaymentRequest) GetAmountMicrobyx() uint64 {
+func (m *PaymentRequest) GetAmountUbyx() uint64 {
 	if m != nil {
-		return m.AmountMicrobyx
+		return m.AmountUbyx
 	}
 	return 0
 }
@@ -261,8 +261,8 @@ func (m *PaymentRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.AmountMicrobyx != 0 {
-		i = encodeVarintPayment(dAtA, i, uint64(m.AmountMicrobyx))
+	if m.AmountUbyx != 0 {
+		i = encodeVarintPayment(dAtA, i, uint64(m.AmountUbyx))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -302,8 +302,8 @@ func (m *PaymentRequest) Size() (n int) {
 	if m.LojaId != 0 {
 		n += 1 + sovPayment(uint64(m.LojaId))
 	}
-	if m.AmountMicrobyx != 0 {
-		n += 1 + sovPayment(uint64(m.AmountMicrobyx))
+	if m.AmountUbyx != 0 {
+		n += 1 + sovPayment(uint64(m.AmountUbyx))
 	}
 	l = len(m.Memo)
 	if l > 0 {
@@ -403,9 +403,9 @@ func (m *PaymentRequest) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AmountMicrobyx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AmountUbyx", wireType)
 			}
-			m.AmountMicrobyx = 0
+			m.AmountUbyx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowPayment
@@ -415,7 +415,7 @@ func (m *PaymentRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AmountMicrobyx |= uint64(b&0x7F) << shift
+				m.AmountUbyx |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

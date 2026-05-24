@@ -140,6 +140,45 @@
           "Query"
         ]
       }
+    },
+    "/byx/payments/v1/payment_requests/{request_id}/qr": {
+      "get": {
+        "summary": "Retorna um payload JSON compacto para QR (sem frontend).",
+        "operationId": "Query_PaymentsQRCode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/byx.payments.v1.QueryPaymentsQRCodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/google.rpc.Status"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "suggested_certificate_id",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Query"
+        ]
+      }
     }
   },
   "definitions": {
@@ -175,9 +214,10 @@
           "type": "string",
           "format": "uint64"
         },
-        "amount_microbyx": {
+        "amount_ubyx": {
           "type": "string",
-          "format": "uint64"
+          "format": "uint64",
+          "description": "Valor do pedido em ubyx, unidade mínima on-chain."
         },
         "memo": {
           "type": "string"
@@ -244,6 +284,33 @@
         },
         "pagination": {
           "$ref": "#/definitions/cosmos.base.query.v1beta1.PageResponse"
+        }
+      }
+    },
+    "byx.payments.v1.QueryPaymentsQRCodeResponse": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "amount_ubyx": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "merchant_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "merchant_owner": {
+          "type": "string"
+        },
+        "suggested_certificate_id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "qr_payload": {
+          "type": "string",
+          "title": "JSON compacto pronto para virar QR: {\"t\":\"byxpay\",\"rid\":\"...\",\"amt\":\"...\",\"mid\":1,\"to\":\"byx1...\"}"
         }
       }
     },

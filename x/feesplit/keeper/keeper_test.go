@@ -92,7 +92,7 @@ func TestBeginBlockerAllowlistSkipsOtherDenom(t *testing.T) {
 	f := initFixture(t)
 
 	customParams := types.DefaultParams()
-	customParams.DenomsAllowlist = []string{"byx"}
+	customParams.DenomsAllowlist = []string{types.DefaultDenom}
 	if err := f.keeper.SetParams(sdk.UnwrapSDKContext(f.ctx), customParams); err != nil {
 		t.Fatalf("failed to set params: %v", err)
 	}
@@ -121,7 +121,7 @@ func TestParamsInvalidSum(t *testing.T) {
 		SplitBpsValidators: 5000,
 		SplitBpsTreasury:   5000,
 		SplitBpsBurn:       1001, // total 11001 invalid
-		DenomsAllowlist:    []string{"byx"},
+		DenomsAllowlist:    []string{types.DefaultDenom},
 	}
 	if err := p.Validate(); err == nil {
 		t.Fatalf("expected validate to fail when sum != 10000")

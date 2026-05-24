@@ -114,7 +114,7 @@ func dayKey(t time.Time) uint64 {
 	return uint64(d.Year())*10000 + uint64(d.Month())*100 + uint64(d.Day())
 }
 
-// CalculateCashbackFromCentavos calcula o cashback em micro BYX a partir de um valor em centavos.
+// CalculateCashbackFromCentavos calcula o cashback em ubyx a partir de um valor em centavos.
 // Ele sempre retorna um sdk.Coin com denom types.DenomBYX.
 func (k Keeper) CalculateCashbackFromCentavos(ctx sdk.Context, valorEmCentavos int64) sdk.Coin {
 	// Se o valor em centavos for inválido ou zero/negativo, não há cashback.
@@ -128,7 +128,7 @@ func (k Keeper) CalculateCashbackFromCentavos(ctx sdk.Context, valorEmCentavos i
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))
 	}
 
-	if params.CashbackRateMicroByxPerReal == 0 {
+	if params.GetCashbackRateUbyxPerReal() == 0 {
 		// Rate 0 significa que o módulo está configurado para não dar cashback.
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))
 	}
@@ -140,19 +140,19 @@ func (k Keeper) CalculateCashbackFromCentavos(ctx sdk.Context, valorEmCentavos i
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))
 	}
 
-	// cashbackMicro = valorEmReais * rate (microBYX por real)
-	rate := int64(params.CashbackRateMicroByxPerReal)
-	cashbackMicro := int64(valorEmReais) * rate
-	if cashbackMicro <= 0 {
+	// cashbackUbyx = valorEmReais * rate (campo legado "ubyx", semântico em ubyx por real)
+	cashbackRateUbyxPerReal := int64(params.GetCashbackRateUbyxPerReal())
+	cashbackAmountUbyx := int64(valorEmReais) * cashbackRateUbyxPerReal
+	if cashbackAmountUbyx <= 0 {
 		return sdk.NewCoin(types.DenomBYX, math.NewInt(0))
 	}
 
-	return sdk.NewCoin(types.DenomBYX, math.NewInt(cashbackMicro))
+	return sdk.NewCoin(types.DenomBYX, math.NewInt(cashbackAmountUbyx))
 }
 
-// MintBYXTo credita BYX para uma conta usando reserva pré-existente da module account.
+// TransferBYXFromReserve credita ubyx para uma conta usando reserva pré-existente da module account.
 // Observação: não faz mint. Emite erro se a reserva não tiver saldo suficiente.
-func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int) error {
+func (k Keeper) TransferBYXFromReserve(ctx sdk.Context, addr sdk.AccAddress, amount math.Int) error {
 	if !amount.IsPositive() {
 		return fmt.Errorf("amount must be positive")
 	}
@@ -180,7 +180,12 @@ func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int)
 	return nil
 }
 
-// AssertSupplyCap garante que o supply total de BYX não ultrapassa o cap.
+// Deprecated: use TransferBYXFromReserve. Mantido apenas para compatibilidade temporária.
+func (k Keeper) MintBYXTo(ctx sdk.Context, addr sdk.AccAddress, amount math.Int) error {
+	return k.TransferBYXFromReserve(ctx, addr, amount)
+}
+
+// AssertSupplyCap garante que o supply total de ubyx não ultrapassa o cap.
 func (k Keeper) AssertSupplyCap(ctx sdk.Context) error {
 	supply := k.bankKeeper.GetSupply(ctx, types.DenomBYX).Amount
 	cap := math.NewInt(types.SupplyCapBYX)

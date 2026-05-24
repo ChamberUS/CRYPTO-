@@ -34,13 +34,25 @@ Fluxo completo usando chain local, mock merchant e relay com dedupe/retry.
    ```
    Logs esperados: `config REST=... LOJA_ID=...` e `[BYX-WEBHOOK] polling iniciado...`.
 
-4) **Rodar script E2E**
+4) **Rodar script E2E (legado)**
    ```bash
    ./scripts/e2e_payments_webhook.sh
    ```
    - Cria PaymentRequest, paga e aguarda `PAID` (timeout 15s).
 
-5) **Verificar logs**
+5) **Rodar smoke E2E ubyx (recomendado)**
+   ```bash
+   STRICT_WEBHOOK=1 \
+   STATE_PATH=./webhook-relay/state.json \
+   MOCK_EVENTS_LOG_PATH=/tmp/byx_mock_events.jsonl \
+   MERCHANT_WEBHOOK_SECRET=devsecret \
+   ./scripts/e2e_payments_webhook_ubyx.sh
+   ```
+   - Valida `amount_ubyx` no create/query/qr/webhook.
+   - Falha se encontrar `amount_microbyx` no fluxo ativo.
+   - Testa replay (idempotência no mock) e assinatura inválida (HTTP 401).
+
+6) **Verificar logs**
    - Relay: `[BYX-WEBHOOK] request <id> detected as PAID`, retries se o mock estiver falhando.
    - Mock: `[MOCK] failing intentionally (n/N)` (primeiros chamados), depois `[MOCK] valid webhook request_id=... amount=...`.
    - Dedupe: apenas um `[MOCK] valid webhook` por `request_id`.
@@ -49,7 +61,7 @@ Fluxo completo usando chain local, mock merchant e relay com dedupe/retry.
 - `REST`: endpoint REST (default `http://127.0.0.1:1317`).
 - `LOJA_ID`: loja alvo (default `1`).
 - `MERCHANT_KEY` / `PAYER_KEY`: nomes no keyring `byxd keys list`.
-- `AMOUNT_MICROBYX`: valor usado pelo script (default `500000` microBYX = 0.5 BYX).
+- `AMOUNT_UBYX`: valor usado pelo script (default `500000` ubyx = 0.5 BYX).
 - `FAIL_FIRST_N`: número de falhas iniciais no mock para exercitar retry/backoff.
 
 ## Observações

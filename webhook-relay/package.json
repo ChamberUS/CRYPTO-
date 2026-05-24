@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
      "start": "node --loader ts-node/esm index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No webhook-relay tests yet\""
   },
   "keywords": [],
   "author": "",

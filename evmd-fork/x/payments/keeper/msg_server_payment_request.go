@@ -28,7 +28,7 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 	if msg.LojaId == 0 {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "loja_id must be > 0")
 	}
-	if msg.AmountMicrobyx == 0 {
+	if msg.AmountUbyx == 0 {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "amount must be > 0")
 	}
 
@@ -56,8 +56,8 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 	expiration := now.Add(time.Duration(expiresIn) * time.Second)
 
 	// fingerprint for idempotence
-	_, hash := fingerprintAndHash(msg.LojaId, msg.AmountMicrobyx, msg.Memo)
-	existingID, found := m.GetDedupeRequestID(ctx, msg.LojaId, msg.AmountMicrobyx, msg.Memo)
+	_, hash := fingerprintAndHash(msg.LojaId, msg.AmountUbyx, msg.Memo)
+	existingID, found := m.GetDedupeRequestID(ctx, msg.LojaId, msg.AmountUbyx, msg.Memo)
 	if found {
 		if existing, ok := m.GetPaymentRequest(ctx, existingID); ok {
 			if existing.Status == types.PaymentStatus_PAYMENT_STATUS_PENDING && now.Unix() < int64(existing.ExpiresAtUnix) {
@@ -67,7 +67,7 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 						sdk.NewAttribute("request_id", strconv.FormatUint(existing.Id, 10)),
 						sdk.NewAttribute("loja_id", strconv.FormatUint(existing.LojaId, 10)),
 						sdk.NewAttribute("merchant_id", strconv.FormatUint(existing.LojaId, 10)),
-						sdk.NewAttribute("amount_microbyx", strconv.FormatUint(existing.AmountMicrobyx, 10)),
+						sdk.NewAttribute("amount_ubyx", strconv.FormatUint(existing.AmountUbyx, 10)),
 						sdk.NewAttribute("memo", existing.Memo),
 						sdk.NewAttribute("creator", msg.Creator),
 						sdk.NewAttribute("fingerprint_hash", fmt.Sprintf("%x", hash[:])),
@@ -86,13 +86,13 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 	m.SetNextPaymentRequestID(ctx, id+1)
 
 	pr := types.PaymentRequest{
-		Id:             id,
-		LojaId:         msg.LojaId,
-		AmountMicrobyx: msg.AmountMicrobyx,
-		Memo:           msg.Memo,
-		Status:         types.PaymentStatus_PAYMENT_STATUS_PENDING,
-		CreatedAtUnix:  uint64(now.Unix()),
-		ExpiresAtUnix:  uint64(expiration.Unix()),
+		Id:            id,
+		LojaId:        msg.LojaId,
+		AmountUbyx:    msg.AmountUbyx,
+		Memo:          msg.Memo,
+		Status:        types.PaymentStatus_PAYMENT_STATUS_PENDING,
+		CreatedAtUnix: uint64(now.Unix()),
+		ExpiresAtUnix: uint64(expiration.Unix()),
 	}
 
 	m.SetPaymentRequest(ctx, pr)
@@ -103,7 +103,7 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 	// keep collections map for compatibility
 	_ = m.PaymentRequests.Set(ctx, pr.Id, pr)
 	_ = m.PaymentRequestsByLoja.Set(ctx, collections.Join(pr.LojaId, pr.Id))
-	m.SetDedupeRequestID(ctx, pr.LojaId, pr.AmountMicrobyx, pr.Memo, pr.Id)
+	m.SetDedupeRequestID(ctx, pr.LojaId, pr.AmountUbyx, pr.Memo, pr.Id)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -111,7 +111,7 @@ func (m msgServer) CreatePaymentRequest(goCtx context.Context, msg *types.MsgCre
 			sdk.NewAttribute("request_id", strconv.FormatUint(id, 10)),
 			sdk.NewAttribute("loja_id", strconv.FormatUint(msg.LojaId, 10)),
 			sdk.NewAttribute("merchant_id", strconv.FormatUint(msg.LojaId, 10)),
-			sdk.NewAttribute("amount_microbyx", strconv.FormatUint(msg.AmountMicrobyx, 10)),
+			sdk.NewAttribute("amount_ubyx", strconv.FormatUint(msg.AmountUbyx, 10)),
 			sdk.NewAttribute("expires_at_unix", strconv.FormatUint(uint64(expiration.Unix()), 10)),
 			sdk.NewAttribute("fingerprint_hash", fmt.Sprintf("%x", hash[:])),
 			sdk.NewAttribute("trace_id", traceIDFromCtx(ctx)),
@@ -161,7 +161,7 @@ func (m msgServer) PayPaymentRequest(goCtx context.Context, msg *types.MsgPayPay
 	}
 	merchantAddr := sdk.AccAddress(merchantAddrBz)
 
-	amount := sdk.NewCoin(lojas.DenomBYX, sdkmath.NewIntFromUint64(pr.AmountMicrobyx))
+	amount := sdk.NewCoin(lojas.DenomBYX, sdkmath.NewIntFromUint64(pr.AmountUbyx))
 	if !amount.Amount.IsPositive() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "amount must be positive")
 	}
@@ -174,11 +174,11 @@ func (m msgServer) PayPaymentRequest(goCtx context.Context, msg *types.MsgPayPay
 	pr.Status = types.PaymentStatus_PAYMENT_STATUS_PAID
 	pr.Payer = msg.Creator
 	pr.PaidAtUnix = uint64(now.Unix())
-	_, hash := fingerprintAndHash(pr.LojaId, pr.AmountMicrobyx, pr.Memo)
+	_, hash := fingerprintAndHash(pr.LojaId, pr.AmountUbyx, pr.Memo)
 
 	m.SetPaymentRequest(ctx, pr)
 	_ = m.PaymentRequests.Set(ctx, pr.Id, pr)
-	m.DeleteDedupeRequestID(ctx, pr.LojaId, pr.AmountMicrobyx, pr.Memo)
+	m.DeleteDedupeRequestID(ctx, pr.LojaId, pr.AmountUbyx, pr.Memo)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -187,7 +187,7 @@ func (m msgServer) PayPaymentRequest(goCtx context.Context, msg *types.MsgPayPay
 			sdk.NewAttribute("loja_id", strconv.FormatUint(pr.LojaId, 10)),
 			sdk.NewAttribute("merchant_id", strconv.FormatUint(pr.LojaId, 10)),
 			sdk.NewAttribute("payer", msg.Creator),
-			sdk.NewAttribute("amount_microbyx", strconv.FormatUint(pr.AmountMicrobyx, 10)),
+			sdk.NewAttribute("amount_ubyx", strconv.FormatUint(pr.AmountUbyx, 10)),
 			sdk.NewAttribute("paid_at_unix", strconv.FormatInt(now.Unix(), 10)),
 			sdk.NewAttribute("fingerprint_hash", fmt.Sprintf("%x", hash[:])),
 			sdk.NewAttribute("trace_id", traceIDFromCtx(ctx)),

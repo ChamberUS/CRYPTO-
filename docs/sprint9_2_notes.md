@@ -1,7 +1,7 @@
 # Sprint 9.2 Notes (Idempotência + Relay Hardening)
 
 ## Dedupe de create-payment-request
-- Fingerprint: `lojaId|amountMicrobyx|memo.trim()`.
+- Fingerprint: `lojaId|amountUbyx|memo.trim()`.
 - Índice KV: chave prefix + lojaID(big endian) + sha256(fingerprint) → requestID.
 - Comportamento:
   - Se já houver request PENDING e não expirada com mesmo fingerprint, reusa (evento `byx_payment_request_reused`).

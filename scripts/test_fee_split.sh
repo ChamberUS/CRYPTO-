@@ -66,20 +66,20 @@ fi
 balance_or_zero() {
   local addr="$1"
   byxd query bank balances "$addr" --node "$NODE" --output json \
-    | jq -r '(.balances[]? | select(.denom=="byx") | .amount) // "0"'
+    | jq -r '(.balances[]? | select(.denom=="ubyx") | .amount) // "0"'
 }
 
 total_supply_byx() {
   byxd query bank total --node "$NODE" --output json \
-    | jq -r '(.supply[]? | select(.denom=="byx") | .amount) // "0"'
+    | jq -r '(.supply[]? | select(.denom=="ubyx") | .amount) // "0"'
 }
 
 treasury_before="$(balance_or_zero "$treasury_addr")"
 supply_before="$(total_supply_byx)"
 
 tmp="$(mktemp)"
-if ! byxd tx bank send marcelo "$ROBERTA_ADDR" 1byx \
-  --fees 10000byx \
+if ! byxd tx bank send marcelo "$ROBERTA_ADDR" 1000000ubyx \
+  --fees 10000ubyx \
   --chain-id "$CHAIN_ID" \
   --node "$NODE" \
   --home "$HOME_DIR" \

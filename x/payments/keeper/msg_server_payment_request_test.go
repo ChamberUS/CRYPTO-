@@ -24,7 +24,7 @@ func TestCreatePaymentRequest(t *testing.T) {
 	resp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
 		Creator:          creator,
 		LojaId:           1,
-		AmountMicrobyx:   1500,
+		AmountUbyx:       1500,
 		Memo:             "pedido #1",
 		ExpiresInSeconds: 120,
 	})
@@ -37,7 +37,7 @@ func TestCreatePaymentRequest(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, types.PaymentStatus_PAYMENT_STATUS_PENDING, pr.Status)
 	require.Equal(t, uint64(1), pr.LojaId)
-	require.Equal(t, uint64(1500), pr.AmountMicrobyx)
+	require.Equal(t, uint64(1500), pr.AmountUbyx)
 	require.NotZero(t, pr.ExpiresAtUnix)
 
 	events := sdkCtx.EventManager().Events()
@@ -53,7 +53,7 @@ func TestCreatePaymentRequest(t *testing.T) {
 		}
 		require.Equal(t, "1", attrs["request_id"])
 		require.Equal(t, "1", attrs["loja_id"])
-		require.Equal(t, "1500", attrs["amount_microbyx"])
+		require.Equal(t, "1500", attrs["amount_ubyx"])
 		require.NotEmpty(t, attrs["expires_at_unix"])
 		require.NotEmpty(t, attrs["fingerprint_hash"])
 	}
@@ -69,10 +69,10 @@ func TestCreatePaymentRequestUnauthorizedCreator(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        thirdPartyStr,
-		LojaId:         1,
-		AmountMicrobyx: 1500,
-		Memo:           "forged",
+		Creator:    thirdPartyStr,
+		LojaId:     1,
+		AmountUbyx: 1500,
+		Memo:       "forged",
 	})
 	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 }
@@ -90,10 +90,10 @@ func TestCreatePaymentRequestAuthorizedOperator(t *testing.T) {
 	f.lojas.merchants[1] = merchant
 
 	resp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        operatorStr,
-		LojaId:         1,
-		AmountMicrobyx: 1200,
-		Memo:           "operator-pos",
+		Creator:    operatorStr,
+		LojaId:     1,
+		AmountUbyx: 1200,
+		Memo:       "operator-pos",
 	})
 	require.NoError(t, err)
 	require.NotZero(t, resp.Id)
@@ -106,18 +106,18 @@ func TestCreatePaymentRequestDedupReusesPending(t *testing.T) {
 	creator, _ := f.addressCodec.BytesToString(f.merchantAddr)
 
 	first, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        creator,
-		LojaId:         1,
-		AmountMicrobyx: 500,
-		Memo:           "A",
+		Creator:    creator,
+		LojaId:     1,
+		AmountUbyx: 500,
+		Memo:       "A",
 	})
 	require.NoError(t, err)
 
 	second, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        creator,
-		LojaId:         1,
-		AmountMicrobyx: 500,
-		Memo:           "A", // same fingerprint
+		Creator:    creator,
+		LojaId:     1,
+		AmountUbyx: 500,
+		Memo:       "A", // same fingerprint
 	})
 	require.NoError(t, err)
 	require.Equal(t, first.Id, second.Id, "should reuse pending request")
@@ -134,9 +134,9 @@ func TestPayPaymentRequest(t *testing.T) {
 	payerStr, _ := f.addressCodec.BytesToString(f.payerAddr)
 
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 2_000,
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 2_000,
 	})
 	require.NoError(t, err)
 
@@ -171,7 +171,7 @@ func TestPayPaymentRequestExpired(t *testing.T) {
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
 		Creator:          merchantStr,
 		LojaId:           1,
-		AmountMicrobyx:   500,
+		AmountUbyx:       500,
 		ExpiresInSeconds: 60,
 	})
 	require.NoError(t, err)
@@ -194,7 +194,7 @@ func TestPayPaymentRequestExpired(t *testing.T) {
 	newResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
 		Creator:          merchantStr,
 		LojaId:           1,
-		AmountMicrobyx:   500,
+		AmountUbyx:       500,
 		Memo:             "",
 		ExpiresInSeconds: 60,
 	})
@@ -210,10 +210,10 @@ func TestCreatePaymentRequestAfterPaidCreatesNewID(t *testing.T) {
 	payerStr, _ := f.addressCodec.BytesToString(f.payerAddr)
 
 	first, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 123,
-		Memo:           "same",
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 123,
+		Memo:       "same",
 	})
 	require.NoError(t, err)
 
@@ -224,10 +224,10 @@ func TestCreatePaymentRequestAfterPaidCreatesNewID(t *testing.T) {
 	require.NoError(t, err)
 
 	second, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 123,
-		Memo:           "same",
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 123,
+		Memo:       "same",
 	})
 	require.NoError(t, err)
 	require.NotEqual(t, first.Id, second.Id)
@@ -241,9 +241,9 @@ func TestPayPaymentRequestTwice(t *testing.T) {
 	payerStr, _ := f.addressCodec.BytesToString(f.payerAddr)
 
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 700,
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 700,
 	})
 	require.NoError(t, err)
 
@@ -268,10 +268,10 @@ func TestPayPaymentRequestEmitsEnrichedEvent(t *testing.T) {
 	payerStr, _ := f.addressCodec.BytesToString(f.payerAddr)
 
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 700,
-		Memo:           "evento",
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 700,
+		Memo:       "evento",
 	})
 	require.NoError(t, err)
 
@@ -297,7 +297,7 @@ func TestPayPaymentRequestEmitsEnrichedEvent(t *testing.T) {
 		require.Equal(t, strconv.FormatUint(createResp.Id, 10), attrs["request_id"])
 		require.Equal(t, strconv.FormatUint(1, 10), attrs["loja_id"])
 		require.Equal(t, payerStr, attrs["payer"])
-		require.Equal(t, strconv.FormatUint(700, 10), attrs["amount_microbyx"])
+		require.Equal(t, strconv.FormatUint(700, 10), attrs["amount_ubyx"])
 		require.NotEmpty(t, attrs["paid_at_unix"])
 	}
 

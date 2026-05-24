@@ -505,8 +505,8 @@ func (m *MsgRegistrarVenda) GetCliente() string {
 }
 
 type MsgRegistrarVendaResponse struct {
-	// Cashback efetivamente creditado em micro BYX (inteiro positivo ou zero)
-	CashbackMicroByx uint64 `protobuf:"varint,1,opt,name=cashback_micro_byx,json=cashbackMicroByx,proto3" json:"cashback_micro_byx,omitempty"`
+	// Cashback efetivamente creditado em ubyx (inteiro positivo ou zero)
+	CashbackUbyx uint64 `protobuf:"varint,1,opt,name=cashback_ubyx,json=cashbackUbyx,proto3" json:"cashback_ubyx,omitempty"`
 }
 
 func (m *MsgRegistrarVendaResponse) Reset()         { *m = MsgRegistrarVendaResponse{} }
@@ -542,9 +542,9 @@ func (m *MsgRegistrarVendaResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegistrarVendaResponse proto.InternalMessageInfo
 
-func (m *MsgRegistrarVendaResponse) GetCashbackMicroByx() uint64 {
+func (m *MsgRegistrarVendaResponse) GetCashbackUbyx() uint64 {
 	if m != nil {
-		return m.CashbackMicroByx
+		return m.CashbackUbyx
 	}
 	return 0
 }
@@ -1690,8 +1690,8 @@ func (m *MsgRegistrarVendaResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	if m.CashbackMicroByx != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.CashbackMicroByx))
+	if m.CashbackUbyx != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.CashbackUbyx))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -2123,8 +2123,8 @@ func (m *MsgRegistrarVendaResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.CashbackMicroByx != 0 {
-		n += 1 + sovTx(uint64(m.CashbackMicroByx))
+	if m.CashbackUbyx != 0 {
+		n += 1 + sovTx(uint64(m.CashbackUbyx))
 	}
 	return n
 }
@@ -3303,9 +3303,9 @@ func (m *MsgRegistrarVendaResponse) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CashbackMicroByx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CashbackUbyx", wireType)
 			}
-			m.CashbackMicroByx = 0
+			m.CashbackUbyx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3315,7 +3315,7 @@ func (m *MsgRegistrarVendaResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CashbackMicroByx |= uint64(b&0x7F) << shift
+				m.CashbackUbyx |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

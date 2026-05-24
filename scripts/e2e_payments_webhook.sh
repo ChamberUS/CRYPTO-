@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 REST=${REST:-http://127.0.0.1:1317}
 LOJA_ID=${LOJA_ID:-1}
-AMOUNT_MICROBYX=${AMOUNT_MICROBYX:-500000} # 0.5 BYX default
+AMOUNT_UBYX=${AMOUNT_UBYX:-500000} # 0.5 BYX default
 MERCHANT_KEY=${MERCHANT_KEY:-merchant}
 PAYER_KEY=${PAYER_KEY:-payer}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
@@ -46,7 +46,7 @@ command -v jq >/dev/null 2>&1 || die "jq is required"
 
 echo "REST=${REST}"
 echo "LOJA_ID=${LOJA_ID}"
-echo "AMOUNT_MICROBYX=${AMOUNT_MICROBYX}"
+echo "AMOUNT_UBYX=${AMOUNT_UBYX}"
 echo "MERCHANT_KEY=${MERCHANT_KEY}"
 echo "PAYER_KEY=${PAYER_KEY}"
 echo "KEYRING_BACKEND=${KEYRING_BACKEND}"
@@ -85,7 +85,7 @@ create_payment_request() {
   tmp=$(mktemp)
   if ! byxd tx payments create-payment-request \
     --loja-id "${LOJA_ID}" \
-    --amount-microbyx "${AMOUNT_MICROBYX}" \
+    --amount-ubyx "${AMOUNT_UBYX}" \
     --from "${MERCHANT_KEY}" \
     --keyring-backend "${KEYRING_BACKEND}" \
     --broadcast-mode sync \

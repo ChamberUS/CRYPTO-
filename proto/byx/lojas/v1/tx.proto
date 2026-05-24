@@ -72,8 +72,8 @@ message MsgRegistrarVenda {
 }
 
 message MsgRegistrarVendaResponse {
-  // Cashback efetivamente creditado em micro BYX (inteiro positivo ou zero)
-  uint64 cashback_micro_byx = 1;
+  // Cashback efetivamente creditado em ubyx (inteiro positivo ou zero)
+  uint64 cashback_ubyx = 1;
 }
 
 message MsgCreateMerchant {

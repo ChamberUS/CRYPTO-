@@ -260,16 +260,22 @@
         "endereco": {
           "type": "string"
         },
-        "cpfcnpj": {
-          "type": "string"
-        },
-        "telefone": {
-          "type": "string"
-        },
         "saldo": {
           "type": "string"
         },
         "creator": {
+          "type": "string"
+        },
+        "operator_address": {
+          "type": "string"
+        },
+        "kyc_ref": {
+          "type": "string"
+        },
+        "document_hash": {
+          "type": "string"
+        },
+        "kyc_status": {
           "type": "string"
         }
       },
@@ -288,27 +294,27 @@
         },
         "faucet_max_per_tx": {
           "type": "string",
-          "title": "Limite por transação do faucet (Int em string, ex \"1000\")"
+          "title": "Limite por transação do faucet em ubyx (Int em string, ex \"1000000000\" = 1000 BYX)"
         },
-        "cashback_rate_micro_byx_per_real": {
+        "cashback_rate_ubyx_per_real": {
           "type": "string",
           "format": "uint64",
-          "title": "Cashback em micro BYX por real gasto (ex.: 2500 = 0.0025 BYX/R$1)"
+          "description": "Taxa de cashback em ubyx por R$1.\nEx.: 2500 = 0.0025 BYX/R$1 = 2500 ubyx/R$1."
         },
         "max_valor_venda_em_centavos": {
           "type": "string",
           "format": "uint64",
           "title": "Limite máximo de valor de venda em centavos (anti-abuso)"
         },
-        "max_cashback_micro_byx_por_venda": {
+        "max_cashback_ubyx_por_venda": {
           "type": "string",
           "format": "uint64",
-          "title": "Limite máximo de cashback por venda em micro BYX"
+          "description": "Limite máximo de cashback por venda em ubyx."
         },
-        "max_cashback_daily_per_loja_microbyx": {
+        "max_cashback_daily_per_loja_ubyx": {
           "type": "string",
           "format": "uint64",
-          "title": "Limite diário de cashback por loja (micro BYX)"
+          "description": "Limite diário de cashback por loja em ubyx."
         },
         "max_sales_per_block_per_loja": {
           "type": "integer",
@@ -400,7 +406,7 @@
         "cliente": {
           "type": "string"
         },
-        "cashback_micro_byx": {
+        "cashback_ubyx": {
           "type": "string",
           "format": "uint64"
         },
@@ -428,7 +434,7 @@
           "type": "string",
           "format": "uint64"
         },
-        "total_cashback_micro_byx": {
+        "total_cashback_ubyx": {
           "type": "string",
           "format": "uint64"
         },

@@ -6,7 +6,7 @@ Objetivo: implementar o módulo `x/certificados` (Cosmos SDK) para emissão e ge
 
 - Módulo Cosmos SDK: `x/certificados` (`ModuleName = "certificados"`)
 - Entidade principal: `Certificate` (NFT-like, não fracionado)
-- Taxa fixa por emissão: **1499byx** (assumindo 1 byx = R$0,01 => R$14,99)
+- Taxa fixa por emissão: **1499ubyx** (0,001499 BYX em base `ubyx`)
 - Imagem associada ao certificado:
   - Nesta sprint: **pipeline off-chain** determinística para gerar PNG “3D-like”
   - On-chain armazena: `image_uri`, `image_sha256`, `image_seed`
@@ -121,7 +121,7 @@ Nota: a renderização é determinística no mesmo ambiente (fontes/render pode 
 Emissão:
 ```bash
 byxd tx certificados issue-certificate 1 NOTEBOOK Dell XPS15 <serial_hash> A file:///tmp/cdp.png <image_sha256> seed-1 \
-  --from marcelo --fees 20000byx --chain-id byx --node tcp://0.0.0.0:26657 --yes
+  --from marcelo --fees 20000ubyx --chain-id byx --node tcp://0.0.0.0:26657 --yes
 ```
 
 Consulta:
@@ -135,4 +135,3 @@ byxd query certificados certificates-by-owner <bech32> -o json
 ```bash
 curl -s "http://127.0.0.1:1317/byx/certificados/v1/certificates/1" | jq .
 ```
-

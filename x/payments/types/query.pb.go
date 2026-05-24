@@ -360,7 +360,7 @@ func (m *QueryPaymentsQRCodeRequest) GetSuggestedCertificateId() uint64 {
 
 type QueryPaymentsQRCodeResponse struct {
 	RequestId              string `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	AmountMicrobyx         uint64 `protobuf:"varint,2,opt,name=amount_microbyx,json=amountMicrobyx,proto3" json:"amount_microbyx,omitempty"`
+	AmountUbyx             uint64 `protobuf:"varint,2,opt,name=amount_ubyx,json=amountUbyx,proto3" json:"amount_ubyx,omitempty"`
 	MerchantId             uint64 `protobuf:"varint,3,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	MerchantOwner          string `protobuf:"bytes,4,opt,name=merchant_owner,json=merchantOwner,proto3" json:"merchant_owner,omitempty"`
 	SuggestedCertificateId uint64 `protobuf:"varint,5,opt,name=suggested_certificate_id,json=suggestedCertificateId,proto3" json:"suggested_certificate_id,omitempty"`
@@ -408,9 +408,9 @@ func (m *QueryPaymentsQRCodeResponse) GetRequestId() string {
 	return ""
 }
 
-func (m *QueryPaymentsQRCodeResponse) GetAmountMicrobyx() uint64 {
+func (m *QueryPaymentsQRCodeResponse) GetAmountUbyx() uint64 {
 	if m != nil {
-		return m.AmountMicrobyx
+		return m.AmountUbyx
 	}
 	return 0
 }
@@ -988,8 +988,8 @@ func (m *QueryPaymentsQRCodeResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 		i--
 		dAtA[i] = 0x18
 	}
-	if m.AmountMicrobyx != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.AmountMicrobyx))
+	if m.AmountUbyx != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.AmountUbyx))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -1119,8 +1119,8 @@ func (m *QueryPaymentsQRCodeResponse) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	if m.AmountMicrobyx != 0 {
-		n += 1 + sovQuery(uint64(m.AmountMicrobyx))
+	if m.AmountUbyx != 0 {
+		n += 1 + sovQuery(uint64(m.AmountUbyx))
 	}
 	if m.MerchantId != 0 {
 		n += 1 + sovQuery(uint64(m.MerchantId))
@@ -1809,9 +1809,9 @@ func (m *QueryPaymentsQRCodeResponse) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AmountMicrobyx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AmountUbyx", wireType)
 			}
-			m.AmountMicrobyx = 0
+			m.AmountUbyx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1821,7 +1821,7 @@ func (m *QueryPaymentsQRCodeResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AmountMicrobyx |= uint64(b&0x7F) << shift
+				m.AmountUbyx |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

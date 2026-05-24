@@ -36,10 +36,10 @@ function buildConfig(env = process.env) {
     allowUnauthenticated: env.BYX_ALLOW_UNAUTHENTICATED === "true",
     createPaymentKey: env.BYX_CREATE_PAYMENT_KEY || "",
     devnetPayerKey: env.BYX_DEVNET_PAYER_KEY || "",
-    txFees: env.BYX_TX_FEES || "5000byx",
+    txFees: env.BYX_TX_FEES || "5000ubyx",
     txGas: env.BYX_TX_GAS || "auto",
     txGasAdjustment: env.BYX_TX_GAS_ADJUSTMENT || "1.3",
-    maxPaymentMicrobyx: envBigInt("BYX_MAX_PAYMENT_MICROBYX", 1_000_000_000_000n, env),
+    maxPaymentUbyx: envBigInt("BYX_MAX_PAYMENT_UBYX", 1_000_000_000_000n, env),
     cliTimeoutMs: envNumber("BYX_CLI_TIMEOUT_MS", 20_000, env),
     txWaitMs: envNumber("BYX_TX_WAIT_MS", 15_000, env),
   };
@@ -118,9 +118,9 @@ app.get("/v1/devnet/merchants/:id/saldo", asyncHandler(async (req) => {
 app.post("/v1/devnet/payment-requests", asyncHandler(async (req) => {
   requireTxKey(config.createPaymentKey, "BYX_CREATE_PAYMENT_KEY");
   const lojaId = parsePositiveUint(req.body?.loja_id, "loja_id");
-  const amountMicrobyx = parsePositiveUint(req.body?.amount_microbyx, "amount_microbyx");
-  if (BigInt(amountMicrobyx) > config.maxPaymentMicrobyx) {
-    throw httpError(400, "amount_microbyx exceeds BYX_MAX_PAYMENT_MICROBYX");
+  const amountUbyx = parsePositiveUint(req.body?.amount_ubyx, "amount_ubyx");
+  if (BigInt(amountUbyx) > config.maxPaymentUbyx) {
+    throw httpError(400, "amount_ubyx exceeds BYX_MAX_PAYMENT_UBYX");
   }
 
   const memo = parseOptionalString(req.body?.memo, "memo", 140);
@@ -129,7 +129,7 @@ app.post("/v1/devnet/payment-requests", asyncHandler(async (req) => {
   const args = [
     "tx", "payments", "create-payment-request",
     "--loja-id", lojaId.toString(),
-    "--amount-microbyx", amountMicrobyx.toString(),
+    "--amount-ubyx", amountUbyx.toString(),
     ...txArgs(config.createPaymentKey),
   ];
   if (memo) args.push("--memo", memo);

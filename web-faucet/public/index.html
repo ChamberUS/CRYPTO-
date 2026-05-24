@@ -56,10 +56,17 @@
 <script>
 const $ = (id) => document.getElementById(id);
 const j = (x) => JSON.stringify(x, null, 2);
+const parseByxToUbyx = (value) => {
+  const normalized = String(value ?? '').trim().replace(',', '.');
+  if (!/^\d+(\.\d{1,6})?$/.test(normalized)) throw new Error('Use BYX com até 6 casas decimais');
+  const [whole, fraction = ''] = normalized.split('.');
+  const combined = `${whole}${fraction.padEnd(6, '0')}`;
+  return combined.replace(/^0+(?=\d)/, '') || '0';
+};
 
 async function faucet() {
   const id = $('fzId').value.trim();
-  const amount = $('fzAmt').value.trim();
+  const amount = parseByxToUbyx($('fzAmt').value.trim());
   const assinante = $('fzSigner').value.trim() || undefined;
 
   $('outFaucet').textContent = '...';
@@ -81,7 +88,7 @@ async function queryMerchant() {
 async function transferir() {
   const fromId = $('trFrom').value.trim();
   const toId   = $('trTo').value.trim();
-  const valor  = $('trVal').value.trim();
+  const valor  = parseByxToUbyx($('trVal').value.trim());
   const assinante = $('trSigner').value.trim() || undefined;
 
   $('outTransfer').textContent = '...';

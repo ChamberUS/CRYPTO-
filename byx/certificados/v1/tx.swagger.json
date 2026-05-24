@@ -329,7 +329,7 @@
         "issue_fee_byx": {
           "type": "string",
           "format": "uint64",
-          "description": "issue_fee_byx define a taxa fixa de emissão em microBYX."
+          "description": "issue_fee_byx define a taxa fixa de emissão em ubyx."
         },
         "allow_transfer": {
           "type": "boolean",

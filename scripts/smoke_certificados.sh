@@ -76,7 +76,7 @@ ensure_merchant() {
   echo "merchant not found for creator; creating one..." >&2
   tx_json="$(byxd tx lojas create-merchant "${MERCHANT_NAME}" "${MERCHANT_ADDR}" "${MERCHANT_OPERATOR}" "${MERCHANT_KYC_REF}" "${MERCHANT_DOCUMENT_HASH}" "${MERCHANT_KYC_STATUS}" \
     --from "${ISSUER_KEY}" \
-    --fees 20000byx \
+    --fees 20000ubyx \
     --chain-id "${CHAIN_ID}" \
     --node "${NODE}" \
     --home "${HOME_DIR}" \
@@ -137,7 +137,7 @@ echo "image_sha256: ${image_sha256}"
 echo "issuing certificate..."
 issue_tx="$(byxd tx certificados issue-certificate "${merchant_id}" "${CERT_CATEGORY}" "${CERT_BRAND}" "${CERT_MODEL}" "${serial_hash}" "${CERT_CONDITION}" "${image_uri}" "${image_sha256}" "${image_seed}" \
   --from "${ISSUER_KEY}" \
-  --fees 20000byx \
+  --fees 20000ubyx \
   --chain-id "${CHAIN_ID}" \
   --node "${NODE}" \
   --home "${HOME_DIR}" \
@@ -190,7 +190,7 @@ echo "${cert_json}" | jq -e --arg id "${cert_id}" --arg owner "${issuer_addr}" -
 echo "transferring..."
 transfer_tx="$(byxd tx certificados transfer-certificate "${cert_id}" "${new_owner_addr}" \
   --from "${ISSUER_KEY}" \
-  --fees 20000byx \
+  --fees 20000ubyx \
   --chain-id "${CHAIN_ID}" \
   --node "${NODE}" \
   --home "${HOME_DIR}" \

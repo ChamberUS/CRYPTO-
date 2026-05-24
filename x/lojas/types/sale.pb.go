@@ -23,14 +23,14 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Sale struct {
-	Id               uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	LojaId           uint64 `protobuf:"varint,2,opt,name=loja_id,json=lojaId,proto3" json:"loja_id,omitempty"`
-	Creator          string `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty"`
-	ValorEmCentavos  uint64 `protobuf:"varint,4,opt,name=valor_em_centavos,json=valorEmCentavos,proto3" json:"valor_em_centavos,omitempty"`
-	Cliente          string `protobuf:"bytes,5,opt,name=cliente,proto3" json:"cliente,omitempty"`
-	CashbackMicroByx uint64 `protobuf:"varint,6,opt,name=cashback_micro_byx,json=cashbackMicroByx,proto3" json:"cashback_micro_byx,omitempty"`
-	Timestamp        string `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	BlockTime        uint64 `protobuf:"varint,8,opt,name=block_time,json=blockTime,proto3" json:"block_time,omitempty"`
+	Id              uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	LojaId          uint64 `protobuf:"varint,2,opt,name=loja_id,json=lojaId,proto3" json:"loja_id,omitempty"`
+	Creator         string `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty"`
+	ValorEmCentavos uint64 `protobuf:"varint,4,opt,name=valor_em_centavos,json=valorEmCentavos,proto3" json:"valor_em_centavos,omitempty"`
+	Cliente         string `protobuf:"bytes,5,opt,name=cliente,proto3" json:"cliente,omitempty"`
+	CashbackUbyx    uint64 `protobuf:"varint,6,opt,name=cashback_ubyx,json=cashbackUbyx,proto3" json:"cashback_ubyx,omitempty"`
+	Timestamp       string `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	BlockTime       uint64 `protobuf:"varint,8,opt,name=block_time,json=blockTime,proto3" json:"block_time,omitempty"`
 }
 
 func (m *Sale) Reset()         { *m = Sale{} }
@@ -101,9 +101,9 @@ func (m *Sale) GetCliente() string {
 	return ""
 }
 
-func (m *Sale) GetCashbackMicroByx() uint64 {
+func (m *Sale) GetCashbackUbyx() uint64 {
 	if m != nil {
-		return m.CashbackMicroByx
+		return m.CashbackUbyx
 	}
 	return 0
 }
@@ -178,7 +178,7 @@ type SalesSummary struct {
 	LojaId                uint64 `protobuf:"varint,1,opt,name=loja_id,json=lojaId,proto3" json:"loja_id,omitempty"`
 	TotalVendas           uint64 `protobuf:"varint,2,opt,name=total_vendas,json=totalVendas,proto3" json:"total_vendas,omitempty"`
 	TotalValorEmCentavos  uint64 `protobuf:"varint,3,opt,name=total_valor_em_centavos,json=totalValorEmCentavos,proto3" json:"total_valor_em_centavos,omitempty"`
-	TotalCashbackMicroByx uint64 `protobuf:"varint,4,opt,name=total_cashback_micro_byx,json=totalCashbackMicroByx,proto3" json:"total_cashback_micro_byx,omitempty"`
+	TotalCashbackUbyx     uint64 `protobuf:"varint,4,opt,name=total_cashback_ubyx,json=totalCashbackUbyx,proto3" json:"total_cashback_ubyx,omitempty"`
 	TicketMedioEmCentavos uint64 `protobuf:"varint,5,opt,name=ticket_medio_em_centavos,json=ticketMedioEmCentavos,proto3" json:"ticket_medio_em_centavos,omitempty"`
 }
 
@@ -236,9 +236,9 @@ func (m *SalesSummary) GetTotalValorEmCentavos() uint64 {
 	return 0
 }
 
-func (m *SalesSummary) GetTotalCashbackMicroByx() uint64 {
+func (m *SalesSummary) GetTotalCashbackUbyx() uint64 {
 	if m != nil {
-		return m.TotalCashbackMicroByx
+		return m.TotalCashbackUbyx
 	}
 	return 0
 }
@@ -321,8 +321,8 @@ func (m *Sale) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x3a
 	}
-	if m.CashbackMicroByx != 0 {
-		i = encodeVarintSale(dAtA, i, uint64(m.CashbackMicroByx))
+	if m.CashbackUbyx != 0 {
+		i = encodeVarintSale(dAtA, i, uint64(m.CashbackUbyx))
 		i--
 		dAtA[i] = 0x30
 	}
@@ -416,8 +416,8 @@ func (m *SalesSummary) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x28
 	}
-	if m.TotalCashbackMicroByx != 0 {
-		i = encodeVarintSale(dAtA, i, uint64(m.TotalCashbackMicroByx))
+	if m.TotalCashbackUbyx != 0 {
+		i = encodeVarintSale(dAtA, i, uint64(m.TotalCashbackUbyx))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -473,8 +473,8 @@ func (m *Sale) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSale(uint64(l))
 	}
-	if m.CashbackMicroByx != 0 {
-		n += 1 + sovSale(uint64(m.CashbackMicroByx))
+	if m.CashbackUbyx != 0 {
+		n += 1 + sovSale(uint64(m.CashbackUbyx))
 	}
 	l = len(m.Timestamp)
 	if l > 0 {
@@ -516,8 +516,8 @@ func (m *SalesSummary) Size() (n int) {
 	if m.TotalValorEmCentavos != 0 {
 		n += 1 + sovSale(uint64(m.TotalValorEmCentavos))
 	}
-	if m.TotalCashbackMicroByx != 0 {
-		n += 1 + sovSale(uint64(m.TotalCashbackMicroByx))
+	if m.TotalCashbackUbyx != 0 {
+		n += 1 + sovSale(uint64(m.TotalCashbackUbyx))
 	}
 	if m.TicketMedioEmCentavos != 0 {
 		n += 1 + sovSale(uint64(m.TicketMedioEmCentavos))
@@ -683,9 +683,9 @@ func (m *Sale) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CashbackMicroByx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CashbackUbyx", wireType)
 			}
-			m.CashbackMicroByx = 0
+			m.CashbackUbyx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSale
@@ -695,7 +695,7 @@ func (m *Sale) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CashbackMicroByx |= uint64(b&0x7F) << shift
+				m.CashbackUbyx |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -948,9 +948,9 @@ func (m *SalesSummary) Unmarshal(dAtA []byte) error {
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TotalCashbackMicroByx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalCashbackUbyx", wireType)
 			}
-			m.TotalCashbackMicroByx = 0
+			m.TotalCashbackUbyx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowSale
@@ -960,7 +960,7 @@ func (m *SalesSummary) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TotalCashbackMicroByx |= uint64(b&0x7F) << shift
+				m.TotalCashbackUbyx |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

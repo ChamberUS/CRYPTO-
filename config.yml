@@ -1,28 +1,28 @@
 version: 1
 validation: sovereign
-default_denom: byx
+default_denom: ubyx
 accounts: 
 - name: marcelo
   coins:
-  - 200000000byx
+  - 200000000000000ubyx
 - name: roberta
   coins:
-  - 100000000byx
+  - 100000000000000ubyx
 client:
   openapi:
     path: docs/static/openapi.json
 faucet:
   name: roberta
   coins:
-  - 5byx
-  - 100000byx
+  - 5000000ubyx
+  - 100000000000ubyx
 validators:
 - name: marcelo
-  bonded: 100000000byx
+  bonded: 100000000000000ubyx
 - name: validator1
-  bonded: 200000000byx
+  bonded: 200000000000000ubyx
 - name: validator2
-  bonded: 100000000byx
+  bonded: 100000000000000ubyx
 
 build:
   main: cmd/byxd

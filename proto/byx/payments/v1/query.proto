@@ -70,7 +70,7 @@ message QueryPaymentsQRCodeRequest {
 
 message QueryPaymentsQRCodeResponse {
   string request_id = 1;
-  uint64 amount_microbyx = 2;
+  uint64 amount_ubyx = 2;
   uint64 merchant_id = 3;
   string merchant_owner = 4;
   uint64 suggested_certificate_id = 5;

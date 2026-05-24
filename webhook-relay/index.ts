@@ -8,8 +8,8 @@ type PaymentRequest = {
   id: number;
   loja_id?: number;
   lojaId?: number;
-  amount_microbyx?: number;
-  amountMicrobyx?: number;
+  amount_ubyx?: number;
+  amountUbyx?: number;
   payer?: string;
   paid_at_unix?: number;
   paidAtUnix?: number;
@@ -55,7 +55,7 @@ type State = {
 type WebhookPayload = {
   request_id: number;
   loja_id?: number;
-  amount_microbyx?: number;
+  amount_ubyx?: number;
   payer?: string;
   paid_at_unix: number;
   event_id: string;
@@ -141,8 +141,8 @@ function buildPayload(pr: PaymentRequest): WebhookPayload {
   };
   const loja = pr.loja_id ?? pr.lojaId;
   if (loja !== undefined) payload.loja_id = loja;
-  const amount = pr.amount_microbyx ?? pr.amountMicrobyx;
-  if (amount !== undefined) payload.amount_microbyx = amount;
+  const amount = pr.amount_ubyx ?? pr.amountUbyx;
+  if (amount !== undefined) payload.amount_ubyx = amount;
   if (pr.payer) payload.payer = pr.payer;
   return payload;
 }

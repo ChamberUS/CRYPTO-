@@ -35,6 +35,7 @@ Objetivo: provar que o relay não reenviará webhooks após reiniciar e que idem
    ./scripts/e2e_payments_webhook.sh          # modo normal, saída limpa
    DEBUG_E2E=1 ./scripts/e2e_payments_webhook.sh   # modo debug (trace + timestamps)
    STRICT_WEBHOOK=1 ./scripts/e2e_payments_webhook.sh # falha se não achar state
+   STRICT_WEBHOOK=1 ./scripts/e2e_payments_webhook_ubyx.sh # smoke completo com payload ubyx + replay/hmac
    ```
    Observe o `REQUEST_ID` e aguarde `[BYX-WEBHOOK] webhook delivered...` e `[MOCK] valid webhook ...`.
 

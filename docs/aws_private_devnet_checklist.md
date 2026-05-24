@@ -16,7 +16,7 @@ Objetivo: operar devnet privada na AWS sem exposição pública de RPC/API sens�
 - `26660/tcp`: apenas rede interna (metrics).
 
 ## 3) Configuração do nó
-- `minimum-gas-prices = "0.025byx"` no `app.toml`.
+- `minimum-gas-prices = "0.025ubyx"` no `app.toml`.
 - `prometheus = true` somente para rede interna.
 - `pex = false` no validator privado (recomendado).
 - `persistent_peers` fixo entre validator/sentry.
@@ -38,7 +38,7 @@ After=network-online.target
 
 [Service]
 User=byx
-ExecStart=/usr/local/bin/byxd start --home /opt/byx --minimum-gas-prices 0.025byx
+ExecStart=/usr/local/bin/byxd start --home /opt/byx --minimum-gas-prices 0.025ubyx
 Restart=always
 RestartSec=3
 LimitNOFILE=65535
@@ -63,4 +63,3 @@ WantedBy=multi-user.target
 - web-faucet apenas dev local; não expor internet.
 - rotação periódica de chaves operacionais.
 - branch protection + CI obrigatória antes de merge.
-

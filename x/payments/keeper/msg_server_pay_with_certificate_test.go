@@ -20,10 +20,10 @@ func TestPayWithCertificate(t *testing.T) {
 	payerStr, _ := f.addressCodec.BytesToString(f.payerAddr)
 
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 2_000,
-		Memo:           "cert",
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 2_000,
+		Memo:       "cert",
 	})
 	require.NoError(t, err)
 
@@ -80,9 +80,9 @@ func TestPayWithCertificateFailsIfNotOwner(t *testing.T) {
 	payerStr, _ := f.addressCodec.BytesToString(f.payerAddr)
 
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 100,
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 100,
 	})
 	require.NoError(t, err)
 
@@ -115,9 +115,9 @@ func TestPayWithCertificateFailsIfRevoked(t *testing.T) {
 	payerStr, _ := f.addressCodec.BytesToString(f.payerAddr)
 
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 100,
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 100,
 	})
 	require.NoError(t, err)
 

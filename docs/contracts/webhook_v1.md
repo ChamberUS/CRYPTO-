@@ -17,7 +17,7 @@ POST {MERCHANT_WEBHOOK_URL}
   "data": {
     "request_id": "uint64",
     "loja_id": "uint64",
-    "amount_microbyx": "string",
+    "amount_ubyx": "string",
     "paid_at_unix": "int64",
     "payer": "string"
   }

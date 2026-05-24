@@ -22,7 +22,7 @@ MERCHANT_KYC_REF="${MERCHANT_KYC_REF:-smoke-kyc-ref}"
 MERCHANT_DOCUMENT_HASH="${MERCHANT_DOCUMENT_HASH:-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}"
 MERCHANT_KYC_STATUS="${MERCHANT_KYC_STATUS:-approved}"
 
-AMOUNT_MICROBYX="${AMOUNT_MICROBYX:-2000}"
+AMOUNT_UBYX="${AMOUNT_UBYX:-2000}"
 
 CERT_CATEGORY="${CERT_CATEGORY:-NOTEBOOK}"
 CERT_BRAND="${CERT_BRAND:-Dell}"
@@ -74,7 +74,7 @@ ensure_merchant() {
   echo "merchant not found for creator; creating one..." >&2
   tx_json="$(byxd tx lojas create-merchant "${MERCHANT_NAME}" "${MERCHANT_ADDR}" "${MERCHANT_OPERATOR}" "${MERCHANT_KYC_REF}" "${MERCHANT_DOCUMENT_HASH}" "${MERCHANT_KYC_STATUS}" \
     --from "${MERCHANT_KEY}" \
-    --fees 20000byx \
+    --fees 20000ubyx \
     --chain-id "${CHAIN_ID}" \
     --node "${NODE}" \
     --home "${HOME_DIR}" \
@@ -127,7 +127,7 @@ echo "issuing certificate to payer..."
 issue_tx="$(byxd tx certificados issue-certificate "${merchant_id}" "${CERT_CATEGORY}" "${CERT_BRAND}" "${CERT_MODEL}" "${serial_hash}" "${CERT_CONDITION}" "${image_uri}" "${image_sha256}" "${image_seed}" \
   --owner "${payer_addr}" \
   --from "${MERCHANT_KEY}" \
-  --fees 20000byx \
+  --fees 20000ubyx \
   --chain-id "${CHAIN_ID}" \
   --node "${NODE}" \
   --home "${HOME_DIR}" \
@@ -157,9 +157,9 @@ done
 echo "certificate_id: ${cert_id}"
 
 echo "creating payment request..."
-create_tx="$(byxd tx payments create-payment-request "${merchant_id}" "${AMOUNT_MICROBYX}" \
+create_tx="$(byxd tx payments create-payment-request "${merchant_id}" "${AMOUNT_UBYX}" \
   --from "${MERCHANT_KEY}" \
-  --fees 20000byx \
+  --fees 20000ubyx \
   --chain-id "${CHAIN_ID}" \
   --node "${NODE}" \
   --home "${HOME_DIR}" \
@@ -197,7 +197,7 @@ echo "${qr_json}" | jq -e --arg rid "${request_id}" --arg to "${merchant_addr}" 
 echo "paying with certificate (atomic)..."
 pay_tx="$(byxd tx payments pay-with-certificate "${request_id}" "${cert_id}" \
   --from "${PAYER_KEY}" \
-  --fees 20000byx \
+  --fees 20000ubyx \
   --chain-id "${CHAIN_ID}" \
   --node "${NODE}" \
   --home "${HOME_DIR}" \

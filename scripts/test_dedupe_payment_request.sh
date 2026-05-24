@@ -7,7 +7,7 @@ REST="${REST_ENDPOINT:-http://127.0.0.1:1317}"
 MERCHANT_KEY="${MERCHANT_KEY:-marcelo}"
 KEYRING_BACKEND="${KEYRING_BACKEND:-test}"
 LOJA_ID="${LOJA_ID:-1}"
-AMOUNT_MICROBYX="${AMOUNT_MICROBYX:-500000}"
+AMOUNT_UBYX="${AMOUNT_UBYX:-500000}"
 
 echo "Using REST=${REST}"
 
@@ -15,7 +15,7 @@ create() {
   local memo="$1"
   byxd tx payments create-payment-request \
     --loja-id "${LOJA_ID}" \
-    --amount-microbyx "${AMOUNT_MICROBYX}" \
+    --amount-ubyx "${AMOUNT_UBYX}" \
     --memo "${memo}" \
     --from "${MERCHANT_KEY}" \
     --keyring-backend "${KEYRING_BACKEND}" \

@@ -52,6 +52,7 @@ import (
 	"github.com/buynnex-corp/byx/docs"
 	certificadosmodulekeeper "github.com/buynnex-corp/byx/x/certificados/keeper"
 	lojasmodulekeeper "github.com/buynnex-corp/byx/x/lojas/keeper"
+	lojastypes "github.com/buynnex-corp/byx/x/lojas/types"
 	paymentsmodulekeeper "github.com/buynnex-corp/byx/x/payments/keeper"
 )
 
@@ -166,7 +167,7 @@ type App struct {
 
 func init() {
 
-	sdk.DefaultBondDenom = "byx"
+	sdk.DefaultBondDenom = lojastypes.BaseDenom
 
 	var err error
 	clienthelpers.EnvPrefix = Name

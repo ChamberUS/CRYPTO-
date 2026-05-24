@@ -56,3 +56,24 @@ func TestFaucetRequiresAdminWhenEnabled(t *testing.T) {
 	})
 	require.Error(t, err)
 }
+
+func TestFaucetDisabled(t *testing.T) {
+	f := initFixture(t)
+	ms := keeper.NewMsgServerImpl(f.keeper)
+
+	params := types.DefaultParams()
+	params.FaucetEnabled = false
+	require.NoError(t, f.keeper.ParamsStore.Set(f.ctx, params))
+
+	creatorBytes := make([]byte, 20)
+	creatorBytes[0] = 7
+	creator, err := f.addressCodec.BytesToString(creatorBytes)
+	require.NoError(t, err)
+
+	_, err = ms.Faucet(f.ctx, &types.MsgFaucet{
+		Creator:   creator,
+		LojistaId: "1",
+		Amount:    "10",
+	})
+	require.Error(t, err)
+}

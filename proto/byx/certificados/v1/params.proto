@@ -14,7 +14,7 @@ message Params {
   // enabled permite ligar/desligar o módulo.
   bool enabled = 1 [(gogoproto.moretags) = "yaml:\"enabled\""];
 
-  // issue_fee_byx define a taxa fixa de emissão em microBYX.
+  // issue_fee_byx define a taxa fixa de emissão em ubyx.
   uint64 issue_fee_byx = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.moretags) = "yaml:\"issue_fee_byx\""

@@ -22,7 +22,7 @@ func TestQueryPaymentRequestMarksExpired(t *testing.T) {
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
 		Creator:          merchantStr,
 		LojaId:           1,
-		AmountMicrobyx:   1000,
+		AmountUbyx:       1000,
 		ExpiresInSeconds: 60,
 	})
 	require.NoError(t, err)
@@ -55,9 +55,9 @@ func TestQueryPaymentRequestsByLojaReturnsCreated(t *testing.T) {
 	merchantStr, _ := f.addressCodec.BytesToString(f.merchantAddr)
 
 	createResp, err := ms.CreatePaymentRequest(f.ctx, &types.MsgCreatePaymentRequest{
-		Creator:        merchantStr,
-		LojaId:         1,
-		AmountMicrobyx: 1234,
+		Creator:    merchantStr,
+		LojaId:     1,
+		AmountUbyx: 1234,
 	})
 	require.NoError(t, err)
 
@@ -71,7 +71,7 @@ func TestQueryPaymentRequestsByLojaReturnsCreated(t *testing.T) {
 	for _, pr := range resp.PaymentRequests {
 		if pr.Id == createResp.Id {
 			found = true
-			require.Equal(t, uint64(1234), pr.AmountMicrobyx)
+			require.Equal(t, uint64(1234), pr.AmountUbyx)
 			require.Equal(t, types.PaymentStatus_PAYMENT_STATUS_PENDING, pr.Status)
 		}
 	}

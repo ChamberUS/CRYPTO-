@@ -29,7 +29,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Params struct {
 	// enabled permite ligar/desligar o módulo.
 	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty" yaml:"enabled"`
-	// issue_fee_byx define a taxa fixa de emissão em microBYX.
+	// issue_fee_byx define a taxa fixa de emissão em ubyx.
 	IssueFeeByx uint64 `protobuf:"varint,2,opt,name=issue_fee_byx,json=issueFeeByx,proto3" json:"issue_fee_byx,omitempty" yaml:"issue_fee_byx"`
 	// allow_transfer permite transferências entre owners quando true.
 	AllowTransfer bool `protobuf:"varint,3,opt,name=allow_transfer,json=allowTransfer,proto3" json:"allow_transfer,omitempty" yaml:"allow_transfer"`

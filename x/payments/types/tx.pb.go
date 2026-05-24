@@ -131,7 +131,7 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 type MsgCreatePaymentRequest struct {
 	Creator          string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	LojaId           uint64 `protobuf:"varint,2,opt,name=loja_id,json=lojaId,proto3" json:"loja_id,omitempty"`
-	AmountMicrobyx   uint64 `protobuf:"varint,3,opt,name=amount_microbyx,json=amountMicrobyx,proto3" json:"amount_microbyx,omitempty"`
+	AmountUbyx       uint64 `protobuf:"varint,3,opt,name=amount_ubyx,json=amountUbyx,proto3" json:"amount_ubyx,omitempty"`
 	Memo             string `protobuf:"bytes,4,opt,name=memo,proto3" json:"memo,omitempty"`
 	ExpiresInSeconds uint64 `protobuf:"varint,5,opt,name=expires_in_seconds,json=expiresInSeconds,proto3" json:"expires_in_seconds,omitempty"`
 }
@@ -183,9 +183,9 @@ func (m *MsgCreatePaymentRequest) GetLojaId() uint64 {
 	return 0
 }
 
-func (m *MsgCreatePaymentRequest) GetAmountMicrobyx() uint64 {
+func (m *MsgCreatePaymentRequest) GetAmountUbyx() uint64 {
 	if m != nil {
-		return m.AmountMicrobyx
+		return m.AmountUbyx
 	}
 	return 0
 }
@@ -806,8 +806,8 @@ func (m *MsgCreatePaymentRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		i--
 		dAtA[i] = 0x22
 	}
-	if m.AmountMicrobyx != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.AmountMicrobyx))
+	if m.AmountUbyx != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.AmountUbyx))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -1049,8 +1049,8 @@ func (m *MsgCreatePaymentRequest) Size() (n int) {
 	if m.LojaId != 0 {
 		n += 1 + sovTx(uint64(m.LojaId))
 	}
-	if m.AmountMicrobyx != 0 {
-		n += 1 + sovTx(uint64(m.AmountMicrobyx))
+	if m.AmountUbyx != 0 {
+		n += 1 + sovTx(uint64(m.AmountUbyx))
 	}
 	l = len(m.Memo)
 	if l > 0 {
@@ -1389,9 +1389,9 @@ func (m *MsgCreatePaymentRequest) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AmountMicrobyx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AmountUbyx", wireType)
 			}
-			m.AmountMicrobyx = 0
+			m.AmountUbyx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1401,7 +1401,7 @@ func (m *MsgCreatePaymentRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AmountMicrobyx |= uint64(b&0x7F) << shift
+				m.AmountUbyx |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

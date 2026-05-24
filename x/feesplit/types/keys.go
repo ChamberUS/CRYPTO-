@@ -1,6 +1,9 @@
 package types
 
-import "cosmossdk.io/collections"
+import (
+	"cosmossdk.io/collections"
+	lojastypes "github.com/buynnex-corp/byx/x/lojas/types"
+)
 
 const (
 	ModuleName = "feesplit"
@@ -12,7 +15,7 @@ const (
 	TreasuryModuleAccount = "treasury"
 	FeeSplitModuleAccount = ModuleName
 
-	DefaultDenom = "byx"
+	DefaultDenom = lojastypes.BaseDenom
 )
 
 var (
