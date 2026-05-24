@@ -329,3 +329,69 @@ Arquivos principais:
 1. subir chain por comando funcional no ambiente alvo (com rede para `buf.build` ou alternativa local preprovisionada);
 2. executar `STRICT_WEBHOOK=1 make e2e-webhook-ubyx-full`;
 3. confirmar `E2E_UBYX_OK` e anexar `e2e.log`, `state.json` e `mock-events.jsonl`.
+
+## Desacoplamento do E2E de `ignite` (2026-05-24)
+
+### Objetivo
+
+Remover dependencia obrigatoria de `ignite chain serve --reset-once` no caminho do smoke E2E webhook/ubyx.
+
+### Modos implementados (`BYX_CHAIN_MODE`)
+
+- `external`: usa chain ja ativa (nao tenta subir chain).
+- `byxd`: sobe com binario local (`BYXD_BIN`, default `byxd`).
+- `custom`: sobe com comando definido em `BYX_CHAIN_START_CMD`.
+- `ignite`: mantem fluxo de `ignite chain serve --reset-once` de forma opcional.
+
+Default seguro aplicado:
+
+- se `BYX_CHAIN_MODE` nao estiver setado e REST/RPC estiverem ativos, usa `external`;
+- se REST/RPC nao estiverem ativos, falha com orientacao explicita para escolher `external|byxd|custom|ignite`.
+
+### Scripts/targets atualizados
+
+- `scripts/e2e_webhook_ubyx_stack_up.sh`
+- `scripts/preflight_webhook_ubyx.sh`
+- `scripts/doctor_webhook_ubyx.sh` (novo)
+- `scripts/e2e_webhook_ubyx_collect_artifacts.sh`
+- `scripts/e2e_payments_webhook_ubyx.sh`
+- `Makefile`
+- `docs/runbooks/e2e_webhook_ubyx.md`
+
+Novos alvos:
+
+- `make e2e-webhook-ubyx-external`
+- `make e2e-webhook-ubyx-byxd`
+- `make e2e-webhook-ubyx-custom`
+
+### Diagnostico de falha `buf.build`
+
+Quando `BYX_CHAIN_MODE=ignite` falha por acesso/proto-cache, os logs agora exibem:
+
+- `Ignite mode failed while trying to access buf.build.`
+- `This is an environment/network/proto-cache issue.`
+- `Use BYX_CHAIN_MODE=external for an already running chain,`
+- `BYX_CHAIN_MODE=byxd for a built binary,`
+- `or BYX_CHAIN_MODE=custom with BYX_CHAIN_START_CMD.`
+
+### Artefatos adicionais
+
+Diretorio `.e2e/webhook-ubyx/` agora inclui:
+
+- `chain_mode.txt`
+- `env_summary.txt` (sem segredos)
+- `startup_command.txt` (mascarado)
+- `failure_reason.txt` (quando houver falha)
+
+### Estado funcional/economico
+
+- `ubyx` permanece como unidade base on-chain.
+- payload publico continua em `amount_ubyx`/`cashback_ubyx`.
+- nao houve mudanca de namespace `/byx/...`, bech32 `byx`, app/chain `byx`, display `BYX`.
+- nao houve reintroducao de mint dinamico em runtime economico.
+
+### Proximo passo recomendado
+
+1. executar `BYX_CHAIN_MODE=external STRICT_WEBHOOK=1 make e2e-webhook-ubyx-full` em ambiente com chain ativa;
+2. capturar evidencia com `E2E_UBYX_OK`;
+3. avancar para ramp sandbox Pix/BYX (sem dinheiro real).

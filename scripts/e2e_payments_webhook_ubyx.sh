@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BYX_REST="${BYX_REST:-${REST:-http://127.0.0.1:1317}}"
 BYX_RPC="${BYX_RPC:-http://127.0.0.1:26657}"
+BYX_CHAIN_MODE="${BYX_CHAIN_MODE:-external}"
 BYX_CHAIN_ID="${BYX_CHAIN_ID:-}"
 LOJA_ID="${LOJA_ID:-1}"
 AMOUNT_UBYX="${AMOUNT_UBYX:-500000}"
@@ -33,7 +34,11 @@ need node
 check_stack() {
   if ! curl -sf "$BYX_REST/cosmos/base/tendermint/v1beta1/syncing" >/dev/null; then
     log "REST unavailable: $BYX_REST"
-    log "Sugestao: subir chain local com: ignite chain serve --reset-once"
+    log "BYX_CHAIN_MODE atual: $BYX_CHAIN_MODE"
+    log "Sugestao: BYX_CHAIN_MODE=external com chain ja ativa"
+    log "Sugestao: BYX_CHAIN_MODE=byxd com byxd start --home <BYX_HOME>"
+    log "Sugestao: BYX_CHAIN_MODE=custom com BYX_CHAIN_START_CMD=<comando>"
+    log "Sugestao: BYX_CHAIN_MODE=ignite (pode depender de buf.build)"
     log "Sugestao: validar REST com: curl -sf $BYX_REST/cosmos/base/tendermint/v1beta1/syncing"
     log "Sugestao: executar diagnostico com: make doctor-webhook-ubyx"
     die "preflight stack failed (REST)"
@@ -41,6 +46,7 @@ check_stack() {
 
   if ! curl -sf "$BYX_RPC/status" >/dev/null; then
     log "RPC unavailable: $BYX_RPC"
+    log "BYX_CHAIN_MODE atual: $BYX_CHAIN_MODE"
     log "Sugestao: confirmar RPC com: curl -sf $BYX_RPC/status"
     log "Sugestao: executar diagnostico com: make doctor-webhook-ubyx"
     die "preflight stack failed (RPC)"

@@ -29,6 +29,10 @@ Artifacts collected at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 - e2e log: $E2E_DIR/e2e.log
 - state file: $E2E_DIR/state.json
 - mock events: $E2E_DIR/mock-events.jsonl
+- chain mode: $E2E_DIR/chain_mode.txt
+- env summary: $E2E_DIR/env_summary.txt
+- startup command (masked): $E2E_DIR/startup_command.txt
+- failure reason: $E2E_DIR/failure_reason.txt
 ART
 
 echo "[collect] artifacts directory: $E2E_DIR"
