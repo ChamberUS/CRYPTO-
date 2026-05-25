@@ -4,6 +4,7 @@ set -euo pipefail
 BYX_REST="${BYX_REST:-http://127.0.0.1:1317}"
 BYX_RPC="${BYX_RPC:-http://127.0.0.1:26657}"
 BYX_CHAIN_MODE="${BYX_CHAIN_MODE:-}"
+BYXD_BIN="${BYXD_BIN:-byxd}"
 KEYRING_BACKEND="${KEYRING_BACKEND:-test}"
 MERCHANT_KEY="${MERCHANT_KEY:-merchant}"
 PAYER_KEY="${PAYER_KEY:-payer}"
@@ -17,6 +18,131 @@ ok() { echo "[OK] $*"; }
 warn() { echo "[WARN] $*"; }
 fail() { echo "[FAIL] $*"; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || fail "missing command: $1"; ok "command available: $1"; }
+
+resolve_byxd_bin() {
+  if [[ "$BYXD_BIN" == */* ]]; then
+    [[ -x "$BYXD_BIN" ]] || fail "BYXD_BIN is not executable: $BYXD_BIN"
+    echo "$BYXD_BIN"
+    return 0
+  fi
+  command -v "$BYXD_BIN" 2>/dev/null || true
+}
+
+show_byxd_info() {
+  local byxd_path version
+  byxd_path="$(resolve_byxd_bin)"
+  [[ -n "$byxd_path" ]] || fail "missing command: $BYXD_BIN"
+
+  ok "byxd bin: $BYXD_BIN"
+  ok "byxd resolved path: $byxd_path"
+
+  version="$("$BYXD_BIN" version --long 2>/dev/null || "$BYXD_BIN" version 2>/dev/null || true)"
+  if [[ -n "$version" ]]; then
+    echo "$version" | head -n 3 | sed 's/^/[OK] byxd version: /'
+  else
+    warn "could not read byxd version/build info"
+  fi
+}
+
+check_amount_ubyx_cli_support() {
+  local help
+  help="$("$BYXD_BIN" tx payments create-payment-request --help 2>&1 || true)"
+  if echo "$help" | grep -q '\[loja-id\] \[amount-ubyx\]'; then
+    ok "create-payment-request supports positional amount-ubyx"
+    if echo "$help" | grep -q -- '--amount-microbyx'; then
+      warn "legacy flag alias still present: --amount-microbyx"
+    fi
+    return 0
+  fi
+
+  if echo "$help" | grep -q -- '--amount-microbyx'; then
+    warn "legacy flag detected: --amount-microbyx"
+  fi
+  fail "byxd CLI does not support positional [amount-ubyx]. Rebuild local binary with: go build -o ./bin/byxd ./cmd/byxd and run with PATH=$(pwd)/bin:\$PATH"
+}
+
+check_e2e_script_uses_positional_amount() {
+  local e2e_script="$ROOT_DIR/scripts/e2e_payments_webhook_ubyx.sh"
+  local cmd_block
+
+  cmd_block="$(awk '
+    /tx payments create-payment-request[[:space:]]*\\$/ {in_cmd=1}
+    in_cmd {
+      print
+      if ($0 !~ /\\[[:space:]]*$/) {
+        exit
+      }
+    }
+  ' "$e2e_script")"
+
+  if [[ -z "$cmd_block" ]]; then
+    fail "could not locate create-payment-request command block in e2e script"
+  fi
+
+  if echo "$cmd_block" | grep -q -- '--amount-ubyx'; then
+    fail "e2e script still uses --amount-ubyx in executable create-payment-request command. Expected positional call: create-payment-request \"\$LOJA_ID\" \"\$AMOUNT_UBYX\""
+  fi
+
+  if echo "$cmd_block" | grep -q -- '--amount-microbyx'; then
+    fail "e2e script still uses legacy --amount-microbyx in executable create-payment-request command"
+  fi
+
+  if echo "$cmd_block" | grep -Fq 'tx payments create-payment-request' \
+    && echo "$cmd_block" | grep -Fq '"$LOJA_ID"' \
+    && echo "$cmd_block" | grep -Fq '"$AMOUNT_UBYX"'; then
+    ok "e2e script configured for positional amount-ubyx"
+    return 0
+  fi
+
+  fail "could not confirm positional create-payment-request usage in executable command block"
+}
+
+check_create_payment_request_runtime_parse() {
+  local -a probe_cmd
+  local cmd_str
+  local output
+  local rc
+
+  probe_cmd=(
+    "$BYXD_BIN" tx payments create-payment-request "1" "1"
+    --generate-only
+    --from "$MERCHANT_KEY"
+    --keyring-backend "$KEYRING_BACKEND"
+    --account-number 0
+    --sequence 0
+    --fees 0ubyx
+    --gas 200000
+    --output json
+  )
+
+  cmd_str="$(printf '%q ' "${probe_cmd[@]}")"
+
+  set +e
+  output="$("${probe_cmd[@]}" 2>&1)"
+  rc=$?
+  set -e
+  if echo "$output" | grep -q "accepts 0 arg(s), received 2"; then
+    fail "byxd CLI help advertises positional amount-ubyx but runtime rejects positional args. Rebuild/regenerate/fix AutoCLI."
+  fi
+
+  if (( rc != 0 )); then
+    warn "byxd positional parse probe failed (non-blocking).
+probe command: $cmd_str
+stderr: $(echo "$output" | head -n 2 | tr '\n' ' ')
+hint: avoid --offline + --generate-only combinations that may conflict with local SDK/client config."
+    return 0
+  fi
+
+  if echo "$output" | grep -qiE "unknown flag|required flag|expects [0-9]+ arg\\(s\\), received"; then
+    warn "byxd positional parse probe failed (non-blocking).
+probe command: $cmd_str
+stderr: $(echo "$output" | head -n 2 | tr '\n' ' ')
+hint: positional parse warning only; real validation continues in e2e execution."
+    return 0
+  fi
+
+  ok "runtime positional parse probe accepted create-payment-request args"
+}
 
 normalize_chain_mode() {
   if [[ -n "$BYX_CHAIN_MODE" ]]; then
@@ -54,6 +180,7 @@ print_mode_guidance() {
   echo "BYX_CHAIN_MODE=$BYX_CHAIN_MODE"
   echo "BYX_REST=$BYX_REST"
   echo "BYX_RPC=$BYX_RPC"
+  echo "BYXD_BIN=$BYXD_BIN"
   echo "CHAIN_START_ATTEMPT_EXPECTED=$attempted_start"
   echo "PORT_DIAG_REST_1317=endpoint:$BYX_REST"
   echo "PORT_DIAG_RPC_26657=endpoint:$BYX_RPC"
@@ -110,7 +237,7 @@ check_key_and_balance() {
   local min_balance=$2
   local address balance
 
-  address="$(byxd keys show "$key_name" -a --keyring-backend "$KEYRING_BACKEND" 2>/dev/null || true)"
+  address="$("$BYXD_BIN" keys show "$key_name" -a --keyring-backend "$KEYRING_BACKEND" 2>/dev/null || true)"
   if [[ -z "$address" ]]; then
     fail "key '$key_name' not found in keyring backend '$KEYRING_BACKEND'. Run: make e2e-webhook-ubyx-keys"
   fi
@@ -125,12 +252,14 @@ check_key_and_balance() {
   fi
 }
 
-need byxd
 need curl
 need jq
 need openssl
 need node
 need npm
+show_byxd_info
+check_amount_ubyx_cli_support
+check_e2e_script_uses_positional_amount
 
 normalize_chain_mode
 print_mode_guidance
@@ -159,5 +288,7 @@ else
   check_key_and_balance "$MERCHANT_KEY" "$MIN_MERCHANT_BALANCE_UBYX"
   check_key_and_balance "$PAYER_KEY" "$MIN_PAYER_BALANCE_UBYX"
 fi
+
+check_create_payment_request_runtime_parse
 
 echo "Preflight webhook/ubyx passed."

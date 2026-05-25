@@ -44,14 +44,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Skip:      true, // skipped because authority gated
 				},
 				{
-					RpcMethod: "CreatePaymentRequest",
-					Use:       "create-payment-request [loja-id] [amount-ubyx]",
-					Short:     "Create a new payment request",
+					RpcMethod:      "CreatePaymentRequest",
+					Use:            "create-payment-request [loja-id] [amount-ubyx]",
+					Short:          "Create a new payment request",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "loja_id"}, {ProtoField: "amount_microbyx"}},
 				},
 				{
-					RpcMethod: "PayPaymentRequest",
-					Use:       "pay-payment-request [request-id]",
-					Short:     "Pay a pending payment request",
+					RpcMethod:      "PayPaymentRequest",
+					Use:            "pay-payment-request [request-id]",
+					Short:          "Pay a pending payment request",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "request_id"}},
 				},
 				{
 					RpcMethod:      "PayWithCertificate",

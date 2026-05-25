@@ -35,6 +35,27 @@ Artifacts collected at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 - e2e log: $E2E_DIR/e2e.log
 - state file: $E2E_DIR/state.json
 - mock events: $E2E_DIR/mock-events.jsonl
+- create-payment-request broadcast: $E2E_DIR/create_payment_request_broadcast.json
+- create-payment-request broadcast stderr: $E2E_DIR/create_payment_request_broadcast.stderr.txt
+- create-payment-request broadcast raw: $E2E_DIR/create_payment_request_broadcast.raw.txt
+- create-payment-request tx: $E2E_DIR/create_payment_request_tx.json
+- create-payment-request txhash: $E2E_DIR/txhash_create_payment_request.txt
+- create-payment-request command: $E2E_DIR/create_payment_request_command.txt
+- merchant query by id: $E2E_DIR/merchant_query_by_id.json
+- merchant query all: $E2E_DIR/merchant_query_all.json
+- create-merchant broadcast: $E2E_DIR/create_merchant_broadcast.json
+- create-merchant broadcast stderr: $E2E_DIR/create_merchant_broadcast.stderr.txt
+- create-merchant broadcast raw: $E2E_DIR/create_merchant_broadcast.raw.txt
+- create-merchant tx: $E2E_DIR/create_merchant_tx.json
+- pay-request broadcast: $E2E_DIR/pay_request_broadcast.json
+- pay-request broadcast stderr: $E2E_DIR/pay_request_broadcast.stderr.txt
+- pay-request broadcast raw: $E2E_DIR/pay_request_broadcast.raw.txt
+- merchant id: $E2E_DIR/merchant_id.txt
+- resolved request id: $E2E_DIR/request_id.txt
+- wait-tx last response: $E2E_DIR/wait_tx_last_response.txt
+- merchant signer info: $E2E_DIR/merchant_signer_info.txt
+- merchant account on-chain: $E2E_DIR/merchant_account_onchain.json
+- chain status: $E2E_DIR/chain_status.json
 - chain mode: $E2E_DIR/chain_mode.txt
 - env summary: $E2E_DIR/env_summary.txt
 - startup command (masked): $E2E_DIR/startup_command.txt

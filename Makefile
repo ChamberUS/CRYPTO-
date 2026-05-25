@@ -115,6 +115,7 @@ preflight-webhook-ubyx:
 	@bash -o pipefail -c 'BYX_CHAIN_MODE="$${BYX_CHAIN_MODE:-}" \
 	BYX_REST="$${BYX_REST:-http://127.0.0.1:1317}" \
 	BYX_RPC="$${BYX_RPC:-http://127.0.0.1:26657}" \
+	BYXD_BIN="$${BYXD_BIN:-byxd}" \
 	KEYRING_BACKEND="$${KEYRING_BACKEND:-test}" \
 	MERCHANT_KEY="$${MERCHANT_KEY:-merchant}" \
 	PAYER_KEY="$${PAYER_KEY:-payer}" \
@@ -136,6 +137,7 @@ e2e-webhook-ubyx:
 	@bash -o pipefail -c 'BYX_CHAIN_MODE="$${BYX_CHAIN_MODE:-}" \
 	BYX_REST="$${BYX_REST:-http://127.0.0.1:1317}" \
 	BYX_RPC="$${BYX_RPC:-http://127.0.0.1:26657}" \
+	BYXD_BIN="$${BYXD_BIN:-byxd}" \
 	STATE_PATH="$${STATE_PATH:-$(PWD)/$(E2E_WEBHOOK_UBYX_DIR)/state.json}" \
 	bash scripts/e2e_payments_webhook_ubyx.sh | tee $(E2E_WEBHOOK_UBYX_DIR)/e2e.log'
 

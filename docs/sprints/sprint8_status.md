@@ -162,7 +162,7 @@ Validar ponta a ponta o fluxo Payment Request -> Pay -> Evento -> Webhook Relay 
 ### Validações implementadas no smoke ubyx
 
 - chain/REST acessíveis
-- create request com `--amount-ubyx`
+- create request com positional `create-payment-request <loja-id> <amount-ubyx>`
 - query e QR com `amount_ubyx`
 - ausência de `amount_microbyx` no fluxo ativo
 - pagamento e status `PAYMENT_STATUS_PAID`
@@ -514,3 +514,392 @@ Resultado:
 1. executar `make e2e-webhook-ubyx-keys`;
 2. garantir saldo de teste em `ubyx` para `merchant` e `payer` na devnet;
 3. rerodar `BYX_CHAIN_MODE=external ... make e2e-webhook-ubyx-full` ate obter `E2E_UBYX_OK`.
+
+## Correcao de compatibilidade Bash no macOS (2026-05-25)
+
+### Causa raiz confirmada
+
+- no macOS, o Bash padrao (3.2) nao suporta `mapfile`;
+- `scripts/e2e_payments_webhook_ubyx.sh` usava `mapfile` para montar `tx_args`;
+- erro observado:
+  - `mapfile: command not found`
+  - `tx_args[0]: unbound variable`
+
+### Correcao aplicada
+
+- `mapfile` substituido por loop compatível com Bash 3.2:
+  - `while IFS= read -r arg; do ... done`
+- adicionado guard rail explicito:
+  - se `tx_args` ficar vazio, falha com `failed to build tx args`.
+
+### Resultado esperado
+
+- script passa a rodar com `/usr/bin/env bash` no macOS sem exigir Bash via Homebrew;
+- falhas de montagem de argumentos ficam diagnosticas e sem `unbound variable`.
+
+## Correcao de compatibilidade da CLI `byxd` com `amount_ubyx` (2026-05-25)
+
+### Causa raiz confirmada
+
+- com chain externa, mock, relay, keyring e saldos OK, o E2E passou a falhar na criacao do pedido:
+  - `unknown flag: --amount-ubyx`
+  - `ERROR: create-payment-request failed`
+- causa: binario `byxd` local antigo (ou divergente) sem suporte ao contrato atual do smoke em `ubyx`.
+
+### Verificacao funcional da flag esperada
+
+- referencia atual do modulo:
+  - `x/payments/module/autocli.go` usa `create-payment-request [loja-id] [amount-ubyx]`;
+  - `proto/byx/payments/v1/tx.proto` usa campo `amount_ubyx`.
+- conclusao: o fluxo E2E deve permanecer no contrato `ubyx`; binario local legado precisa ser atualizado.
+
+### Correcao aplicada
+
+- `scripts/preflight_webhook_ubyx.sh`:
+  - aceita `BYXD_BIN` (default `byxd`);
+  - imprime binario configurado, path resolvido e versao/build info (quando disponivel);
+  - valida `byxd tx payments create-payment-request --help` com suporte a assinatura posicional `[amount-ubyx]`;
+  - valida que o comando executavel de `create-payment-request` no script E2E nao usa `--amount-ubyx` nem `--amount-microbyx` (sem falso positivo por strings de diagnostico);
+  - falha cedo com mensagem orientando rebuild local quando a usage esperada nao existe.
+- `scripts/e2e_payments_webhook_ubyx.sh`:
+  - aceita `BYXD_BIN` (default `byxd`);
+  - usa `BYXD_BIN` em `keys`, `tx` e `query`;
+  - cria payment request usando somente assinatura posicional `[loja-id] [amount-ubyx]`.
+- `Makefile`:
+  - `preflight-webhook-ubyx` e `e2e-webhook-ubyx` agora propagam `BYXD_BIN`.
+
+### Como executar com binario local atualizado
+
+```bash
+mkdir -p bin
+go build -o ./bin/byxd ./cmd/byxd
+BYXD_BIN=./bin/byxd \
+BYX_CHAIN_MODE=external \
+BYX_REST=http://127.0.0.1:1317 \
+BYX_RPC=http://127.0.0.1:26657 \
+STRICT_WEBHOOK=1 \
+make e2e-webhook-ubyx-full
+```
+
+### Proximo passo recomendado
+
+1. rebuild local do `byxd` para contrato `ubyx`;
+2. rerodar preflight para validar suporte a `amount-ubyx`;
+3. rerodar E2E completo ate capturar `E2E_UBYX_OK`.
+
+## Correcao de divergencia AutoCLI (help vs runtime) em create-payment-request (2026-05-25)
+
+### Causa raiz confirmada
+
+- o help da CLI mostrava:
+  - `create-payment-request [loja-id] [amount-ubyx]`
+- mas a execucao real com posicionais falhava:
+  - `accepts 0 arg(s), received 2`
+- causa: `Use` em `x/payments/module/autocli.go` estava alinhado ao contrato novo, mas faltava mapeamento de `PositionalArgs` efetivo para o parser runtime.
+
+### Origem de `--amount-microbyx`
+
+- o runtime AutoCLI ainda expunha nomenclatura legada para o segundo campo em parte do mapeamento interno de descriptor;
+- por isso o parser precisava de alias interno para resolver o positional corretamente no binario atual.
+
+### Correcao aplicada
+
+- `x/payments/module/autocli.go`:
+  - `CreatePaymentRequest` agora declara `PositionalArgs` para `loja_id` e campo de amount;
+  - mapeamento interno de amount ajustado para compatibilidade runtime (`amount_microbyx`) sem mudar o contrato externo do comando.
+- resultado no CLI:
+  - parse posicional passou a funcionar;
+  - `--loja-id`/`--amount-microbyx` deixaram de ser caminho principal;
+  - E2E continua usando somente:
+    - `create-payment-request "$LOJA_ID" "$AMOUNT_UBYX"`.
+- `scripts/preflight_webhook_ubyx.sh`:
+  - adicionada sonda de parse runtime (`--generate-only --offline`, sem `--chain-id`) para capturar divergencia help/runtime cedo;
+  - mensagem explicita para caso de mismatch AutoCLI.
+
+### Ajuste de probe no preflight (2026-05-25)
+
+- falha observada:
+  - `byxd positional parse probe failed: chain ID cannot be used when offline and generate-only flags are set`
+- causa:
+  - probe de parse incluia combinacao instavel/invalida com `--offline + --generate-only` (podendo conflitar com chain-id local);
+- correcao:
+  - remover `--offline` e manter `--generate-only` com flags minimas sem broadcast real;
+  - manter probe sem broadcast real;
+  - se o probe falhar por variacao de SDK/config local, registrar warning nao bloqueante;
+  - em falha, imprimir comando/stderr e hint explicito sobre combinacao instavel.
+
+### Comando correto final
+
+```bash
+./bin/byxd tx payments create-payment-request 1 500000 \
+  --from merchant \
+  --keyring-backend test \
+  --chain-id byx-devnet-private-1 \
+  --node http://127.0.0.1:26657 \
+  --fees 0ubyx \
+  --gas auto \
+  --gas-adjustment 1.3 \
+  --yes \
+  --output json
+```
+
+### Proximo passo recomendado
+
+1. manter `BYXD_BIN=./bin/byxd` no fluxo local;
+2. rerodar preflight/doctor com chain ativa;
+3. capturar `E2E_UBYX_OK` no smoke externo.
+
+## Correcao de indexacao de tx no E2E webhook/ubyx (2026-05-25)
+
+### Causa raiz confirmada
+
+- a tx de `create-payment-request` era broadcastada com sucesso e retornava `txhash`;
+- o E2E consultava a tx cedo demais no RPC;
+- quando o indexador ainda nao tinha materializado a tx, a consulta retornava `tx not indexed`/`not found`;
+- o fluxo antigo ainda podia seguir para `jq` com arquivo vazio ou inexistente, culminando em:
+  - `jq: error: Could not open file`
+  - `ERROR: could not resolve request_id`
+
+### Correcao aplicada
+
+- `scripts/e2e_payments_webhook_ubyx.sh` agora:
+  - espera a indexacao com retry usando `./bin/byxd q tx <TXHASH> --node <RPC> -o json`;
+  - usa `WAIT_TX_ATTEMPTS=60` e `WAIT_TX_SLEEP_S=2` por default (`~120s`);
+  - grava JSON apenas quando a resposta e JSON valido;
+  - falha com mensagem clara incluindo `txhash`, `RPC` e dica para verificar `tx_index`;
+  - nunca chama `jq` sem antes validar existencia, tamanho e JSON valido do arquivo;
+  - resolve `request_id` a partir de `.events[]`, `.tx_response.events[]`, `.logs[].events[]` e `.tx_response.logs[].events[]`;
+  - aceita atributos normais e valores/chaves decodificadas de base64 quando presentes.
+
+### Artefatos adicionados
+
+Em `.e2e/webhook-ubyx/`:
+
+- `create_payment_request_broadcast.json`
+- `create_payment_request_tx.json`
+- `txhash_create_payment_request.txt`
+- `request_id.txt`
+- `wait_tx_last_response.txt`
+
+### Diagnostico manual
+
+```bash
+./bin/byxd q tx <TXHASH> --node http://127.0.0.1:26657 -o json | jq
+curl -s http://127.0.0.1:26657/status | jq -r '.result.node_info.other.tx_index'
+```
+
+### Proximo comando E2E
+
+```bash
+BYXD_BIN=./bin/byxd \
+BYX_CHAIN_MODE=external \
+BYX_REST=http://127.0.0.1:1317 \
+BYX_RPC=http://127.0.0.1:26657 \
+STRICT_WEBHOOK=1 \
+make e2e-webhook-ubyx-full
+```
+
+### Estado economico
+
+- `ubyx` permanece inalterado como unidade base;
+- nao houve mudanca de runtime economico;
+- nao houve reintroducao de `MintCoins`;
+- nao houve alteracao de genesis, saldo, supply cap ou denom.
+
+## Correcao de rejeicao em CheckTx no create-payment-request (2026-05-25)
+
+### Causa raiz confirmada
+
+- o E2E ja nao estava falhando por indexacao;
+- o broadcast de `create-payment-request` retornava `txhash`, mas com `code != 0`;
+- nesse caso a tx era rejeitada no `CheckTx`/antehandler e nao entrava em bloco;
+- portanto `q tx <hash>` retornava `not found` como consequencia da rejeicao, nao por atraso de indexacao.
+
+### Sintoma observado
+
+- `codespace: sdk`
+- `code: 4`
+- `raw_log: signature verification failed; please verify account number (...) and chain-id (...): (unable to verify single signer signature): unauthorized`
+
+### Correcao aplicada
+
+- `scripts/e2e_payments_webhook_ubyx.sh` agora:
+  - salva sempre `.e2e/webhook-ubyx/create_payment_request_broadcast.json`;
+  - extrai `code`, `codespace`, `raw_log` e `txhash` antes de qualquer `wait_tx`;
+  - falha imediatamente com `create-payment-request broadcast rejected` quando `code != 0`;
+  - nao chama `wait_tx` nem `q tx` quando o broadcast foi rejeitado;
+  - registra diagnostico sem segredos:
+    - endereco atual do signer `merchant`;
+    - `account_number` e `sequence` on-chain;
+    - `chain-id` resolvido do RPC;
+    - comando sanitizado usado na tx real;
+  - define a tx real com assinatura online normal:
+    - `--chain-id`
+    - `--node`
+    - `--fees 0ubyx`
+    - `--gas auto`
+    - `--gas-adjustment 1.3`
+    - `--broadcast-mode sync`
+  - protege contra flags indevidas na tx real:
+    - `--account-number`
+    - `--sequence`
+    - `--offline`
+    - `--generate-only`
+
+### Artefatos adicionados
+
+- `create_payment_request_command.txt`
+- `merchant_signer_info.txt`
+- `merchant_account_onchain.json`
+- `chain_status.json`
+
+### Diagnostico manual
+
+```bash
+./bin/byxd keys show merchant -a --keyring-backend test
+./bin/byxd q auth account <MERCHANT_ADDR> --node http://127.0.0.1:26657 -o json | jq
+curl -s http://127.0.0.1:1317/cosmos/auth/v1beta1/accounts/<MERCHANT_ADDR> | jq
+curl -s http://127.0.0.1:26657/status | jq -r '.result.node_info.network'
+```
+
+Comando manual equivalente:
+
+```bash
+./bin/byxd tx payments create-payment-request 1 500000 \
+  --from merchant \
+  --keyring-backend test \
+  --chain-id byx-devnet-private-1 \
+  --node http://127.0.0.1:26657 \
+  --fees 0ubyx \
+  --gas auto \
+  --gas-adjustment 1.3 \
+  --broadcast-mode sync \
+  --yes \
+  --output json
+```
+
+### Estado economico
+
+- `ubyx` permanece inalterado;
+- nao houve mudanca de runtime economico;
+- nao houve alteracao de genesis, supply ou saldo;
+- nao houve reintroducao de `MintCoins`.
+
+## Correcao de pre-condicao de merchant/loja no E2E webhook/ubyx (2026-05-25)
+
+### Causa raiz confirmada
+
+- a chave `merchant` no keyring existia e tinha saldo;
+- a conta on-chain do signer tambem existia;
+- mas `payments` nao procura a chave local: ele chama `lojasKeeper.GetMerchant(ctx, loja_id)`;
+- portanto `LOJA_ID=1` so funciona se existir um `Merchant` on-chain com esse `id`;
+- quando a chain e resetada, ou quando o `merchant` registrado pertence a outro `creator`, o `create-payment-request` falha com:
+  - `merchant not found: key not found`
+
+### Diferenca entre keyring e merchant do modulo
+
+- keyring `merchant`: identidade local para assinatura;
+- `Merchant` do modulo `lojas`: registro funcional on-chain associado a um `id`;
+- saldo e keyring corretos nao garantem que o `loja_id` usado pelo `payments` exista no estado de `lojas`.
+
+### Correcao aplicada
+
+- `scripts/e2e_payments_webhook_ubyx.sh` agora executa `ensure_merchant_or_loja()` antes da payment request:
+  - consulta `merchant` por `LOJA_ID`;
+  - valida se o `creator` do merchant bate com o endereco da chave `merchant`;
+  - se nao bater, consulta `merchant-all` e procura um merchant do mesmo `creator`;
+  - se ainda nao existir, faz `tx lojas create-merchant`;
+  - aguarda a tx de criacao;
+  - extrai o `merchant_id` do evento ou do estado consultado;
+  - atualiza `LOJA_ID` para o id real antes do `create-payment-request`.
+
+### CLI usada para consultar/criar merchant
+
+Consulta:
+
+```bash
+./bin/byxd query lojas merchant 1 --node http://127.0.0.1:26657 -o json | jq
+./bin/byxd query lojas merchant-all --node http://127.0.0.1:26657 -o json | jq
+```
+
+Criacao:
+
+```bash
+MERCHANT_ADDR="$(./bin/byxd keys show merchant -a --keyring-backend test)"
+./bin/byxd tx lojas create-merchant \
+  "BYX E2E Merchant" \
+  "BYX E2E Address" \
+  "$MERCHANT_ADDR" \
+  "e2e" \
+  "0000000000000000000000000000000000000000000000000000000000000000" \
+  "pending" \
+  --from merchant \
+  --keyring-backend test \
+  --chain-id byx-devnet-private-1 \
+  --node http://127.0.0.1:26657 \
+  --fees 0ubyx \
+  --gas auto \
+  --gas-adjustment 1.3 \
+  --broadcast-mode sync \
+  --yes \
+  --output json
+```
+
+### Artefatos adicionados
+
+- `merchant_query_by_id.json`
+- `merchant_query_all.json`
+- `create_merchant_broadcast.json`
+- `create_merchant_broadcast.stderr.txt`
+- `create_merchant_tx.json`
+- `merchant_id.txt`
+
+### Ajuste adicional de robustez
+
+- `create-merchant` do E2E agora separa stdout/stderr:
+  - stdout JSON em `create_merchant_broadcast.json`
+  - stderr em `create_merchant_broadcast.stderr.txt`
+- stdout bruto em `create_merchant_broadcast.raw.txt`
+- se o stdout nao vier como JSON valido, o script imprime ambos e falha com:
+  - `create-merchant broadcast: invalid json ...`
+- `wait_tx` nao e chamado quando o broadcast tem `code != 0`.
+
+## Correcao de `invalid json` em broadcasts de tx (2026-05-25)
+
+### Causa raiz confirmada
+
+- o `create-payment-request` ainda gravava a saida bruta inteira no `.json`;
+- o stdout observado continha:
+  - `gas estimate: 71773`
+  - seguido do JSON real de broadcast;
+- isso fazia o `jq` falhar com erro de parse como `Invalid numeric literal`.
+
+### Correcao aplicada
+
+- `scripts/e2e_payments_webhook_ubyx.sh` agora usa um helper unico para txs do E2E:
+  - `create-merchant`
+  - `create-payment-request`
+  - `pay-payment-request`
+- o helper:
+  - salva stdout bruto em `.raw.txt`;
+  - salva stderr em `.stderr.txt`;
+  - tenta extrair o ultimo objeto JSON valido para o `.json`;
+  - falha com `<label> returned invalid json` quando nao encontra JSON valido;
+  - valida `.code` e falha com `<label> broadcast rejected` quando `code != 0`;
+  - so chama `wait_tx` quando `code == 0`.
+
+### Artefatos adicionados
+
+- `create_payment_request_broadcast.stderr.txt`
+- `create_payment_request_broadcast.raw.txt`
+- `create_merchant_broadcast.raw.txt`
+- `pay_request_broadcast.json`
+- `pay_request_broadcast.stderr.txt`
+- `pay_request_broadcast.raw.txt`
+
+### Estado economico
+
+- `ubyx` permanece inalterado;
+- nao houve mudanca de runtime economico;
+- nao houve alteracao de genesis, supply ou saldo;
+- nao houve reintroducao de `MintCoins`.
