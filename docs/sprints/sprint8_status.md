@@ -785,6 +785,41 @@ Comando manual equivalente:
 - nao houve alteracao de genesis, supply ou saldo;
 - nao houve reintroducao de `MintCoins`.
 
+## Confirmacao de sucesso do E2E webhook/ubyx (2026-05-25)
+
+### Resultado no ambiente real
+
+- o E2E webhook/ubyx passou com sucesso em ambiente real;
+- marcador final observado:
+  - `E2E_UBYX_OK request_id=6`
+- payload de pagamento confirmado:
+  - `loja_id=1`
+  - `amount_ubyx=500000`
+- payload final de webhook confirmado:
+  - `request_id=6`
+  - `loja_id=1`
+  - `amount_ubyx=500000`
+  - `paid_at_unix=<unix>`
+- logs de progresso observados:
+  - `PAY_REQUEST_START`
+  - `PAY_REQUEST_DONE`
+- state do webhook atualizado com sucesso.
+
+### Fechamento desta etapa
+
+- `create-payment-request` confirmado com `code=0`;
+- `request_id` resolvido corretamente;
+- `GET /payment_requests/{id}` e `GET /payment_requests/{id}/qr` confirmados;
+- `pay-payment-request` executado com forma posicional;
+- pagamento confirmado;
+- webhook confirmado;
+- replay/idempotencia e assinatura invalida permaneceram no escopo validado do smoke.
+
+### Observacao operacional
+
+- artefatos em `.e2e/` sao apenas locais e nao devem ser commitados;
+- `.e2e/` agora fica ignorado por git.
+
 ## Correcao de pre-condicao de merchant/loja no E2E webhook/ubyx (2026-05-25)
 
 ### Causa raiz confirmada
@@ -896,6 +931,104 @@ MERCHANT_ADDR="$(./bin/byxd keys show merchant -a --keyring-backend test)"
 - `pay_request_broadcast.json`
 - `pay_request_broadcast.stderr.txt`
 - `pay_request_broadcast.raw.txt`
+
+## Correcao de `created` vs `reused` em CreatePaymentRequest (2026-05-25)
+
+### Causa raiz confirmada
+
+- o modulo `payments` aceita dois caminhos validos em `CreatePaymentRequest`:
+  - `byx_payment_request_created`
+  - `byx_payment_request_reused`
+- o E2E validava apenas `created`, e por isso falhava com:
+  - `create event missing amount_ubyx`
+- a reutilizacao ocorre quando ja existe request pendente com a mesma combinacao:
+  - `loja_id`
+  - `amount_ubyx`
+  - `memo`
+
+### Correcao aplicada
+
+- `scripts/e2e_payments_webhook_ubyx.sh` agora:
+  - define `E2E_MEMO=e2e-webhook-ubyx-<timestamp>-<pid>` por execucao;
+  - passa `--memo "$E2E_MEMO"` no `create-payment-request`;
+  - salva o memo em `e2e_memo.txt`;
+  - aceita `amount_ubyx` e `request_id` tanto em `byx_payment_request_created` quanto em `byx_payment_request_reused`;
+  - mantem fallback REST para resolver `request_id`;
+  - corrige `pay-payment-request` para forma posicional (`pay-payment-request [request-id]`);
+  - faz `wait_tx` receber sempre o destino correto, sem side effect fixo.
+
+### Artefatos adicionados
+
+- `e2e_memo.txt`
+- `pay_request_tx.json`
+
+## Correcao de falha silenciosa apos `REQUEST_ID` (2026-05-25)
+
+### Causa raiz confirmada
+
+- apos `REQUEST_ID=<id>`, o fluxo chamava `assert_query_fields "$req_id"`;
+- essa funcao usava `curl -sf` diretamente em assignment com `set -e`;
+- se `/byx/payments/v1/payment_requests/{id}` ou `/qr` respondesse erro HTTP, o script podia sair sem imprimir contexto util.
+
+### Correcao aplicada
+
+- `scripts/e2e_payments_webhook_ubyx.sh` agora adiciona `curl_json_checked(label, url, out_file, http_file)`;
+- o helper:
+  - salva body em arquivo;
+  - salva HTTP code em arquivo;
+  - imprime `label`, `url`, `http_code` e body quando a resposta nao e `2xx`;
+  - valida JSON com `jq` antes de continuar.
+- `assert_query_fields` passou a usar:
+  - `payment_request_query.json`
+  - `payment_request_query.http.txt`
+  - `payment_request_qr.json`
+  - `payment_request_qr.http.txt`
+- se `amount_ubyx` faltar, o JSON completo e impresso antes do `die`.
+
+## Correcao de morte silenciosa entre `REQUEST_ID` e `pay_request` (2026-05-25)
+
+### Causa raiz confirmada
+
+- `create-payment-request` ja passava;
+- `request_id` ja era resolvido;
+- `GET /payment_requests/{id}` e `GET /payment_requests/{id}/qr` podiam responder `200`;
+- ainda assim o script podia morrer logo apos `REQUEST_ID=<id>` por validacoes frageis em `assert_query_fields`;
+- o fluxo tambem nao deixava marcador claro de entrada em `pay_request`.
+
+### Correcao aplicada
+
+- `assert_query_fields` agora:
+  - captura valores em variaveis shell;
+  - compara com `[[ ... ]]` em vez de depender de `jq -e` para controle de fluxo;
+  - aceita `amount_ubyx` como string ou numero via `tostring`;
+  - exige `PAYMENT_STATUS_PENDING` antes do pagamento;
+  - nao exige `payer` preenchido antes do `pay-payment-request`;
+  - valida `qr_payload` com `fromjson` e compara `amt` como string/numero;
+  - imprime o JSON inteiro antes de falhar.
+- logs adicionados:
+  - `ASSERT_QUERY_FIELDS_START request_id=...`
+  - `ASSERT_QUERY_FIELDS_OK request_id=...`
+  - `PAY_REQUEST_START request_id=...`
+  - `PAY_REQUEST_DONE request_id=...`
+- `pay_request` agora grava `pay_request_command.txt` antes do broadcast.
+
+### Artefatos adicionados
+
+- `pay_request_command.txt`
+
+### Estado economico
+
+- `ubyx` permanece inalterado;
+- nao houve mudanca de runtime economico;
+- nao houve alteracao de genesis, supply ou saldo;
+- nao houve reintroducao de `MintCoins`.
+
+### Estado economico
+
+- `ubyx` permanece inalterado;
+- nao houve mudanca de runtime economico;
+- nao houve alteracao de genesis, supply ou saldo;
+- nao houve reintroducao de `MintCoins`.
 
 ### Estado economico
 

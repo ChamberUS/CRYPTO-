@@ -37,6 +37,7 @@ evmd-fork/build/
 .buynnex*/
 webhook-relay/state.json
 **/state.json
+.e2e/
 terraform.tfstate
 terraform.tfstate.*
 .terraform/

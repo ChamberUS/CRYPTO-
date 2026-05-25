@@ -259,6 +259,11 @@ Artefatos relevantes da criacao da payment request:
 - `create_payment_request_tx.json`
 - `txhash_create_payment_request.txt`
 - `create_payment_request_command.txt`
+- `e2e_memo.txt`
+- `payment_request_query.json`
+- `payment_request_query.http.txt`
+- `payment_request_qr.json`
+- `payment_request_qr.http.txt`
 - `merchant_query_by_id.json`
 - `merchant_query_all.json`
 - `create_merchant_broadcast.json`
@@ -268,6 +273,8 @@ Artefatos relevantes da criacao da payment request:
 - `pay_request_broadcast.json`
 - `pay_request_broadcast.stderr.txt`
 - `pay_request_broadcast.raw.txt`
+- `pay_request_tx.json`
+- `pay_request_command.txt`
 - `merchant_id.txt`
 - `merchant_signer_info.txt`
 - `merchant_account_onchain.json`
@@ -535,6 +542,48 @@ Comando manual equivalente:
 - se a pre-condicao nao puder ser garantida, o erro agora e explicito:
   - `merchant/loja prerequisite missing`
 
+### `created` vs `reused` em payment request
+
+- `CreatePaymentRequest` tem dois caminhos validos no modulo `payments`:
+  - cria nova request e emite `byx_payment_request_created`
+  - reutiliza request pendente equivalente e emite `byx_payment_request_reused`
+- a regra de dedupe usa:
+  - `loja_id`
+  - `amount_ubyx`
+  - `memo`
+- por isso o E2E agora define um `E2E_MEMO` unico por execucao e salva em `e2e_memo.txt`;
+- a validacao do fluxo aceita `amount_ubyx` e `request_id` tanto em `created` quanto em `reused`.
+
+Observacao operacional:
+
+- `pay-payment-request` e posicional no AutoCLI:
+  - `pay-payment-request [request-id]`
+- o E2E nao usa mais `--request-id`.
+
+### Falha silenciosa apos `REQUEST_ID`
+
+- antes, `assert_query_fields` usava `curl -sf` diretamente em command substitution;
+- com `set -e`, qualquer erro HTTP podia encerrar o script sem contexto claro logo apos `REQUEST_ID=<id>`;
+- o E2E agora usa `curl_json_checked(label, url, out_file, http_file)` para:
+  - salvar body em arquivo;
+  - salvar HTTP code em arquivo;
+  - imprimir `label`, `url`, `http_code` e `body` quando o endpoint falha;
+  - validar JSON com `jq` antes de seguir.
+- `assert_query_fields` agora emite marcadores explicitos:
+  - `ASSERT_QUERY_FIELDS_START request_id=...`
+  - `ASSERT_QUERY_FIELDS_OK request_id=...`
+- `pay_request` agora emite:
+  - `PAY_REQUEST_START request_id=...`
+  - `PAY_REQUEST_DONE request_id=...`
+- antes do broadcast do pagamento, o script grava `pay_request_command.txt` para confirmar entrada nessa etapa.
+
+Artefatos dessa etapa:
+
+- `payment_request_query.json`
+- `payment_request_query.http.txt`
+- `payment_request_qr.json`
+- `payment_request_qr.http.txt`
+
 ### Idempotencia falhando
 
 - mock deve responder `duplicate ok` no replay
@@ -597,6 +646,11 @@ Após `make e2e-webhook-ubyx-full`:
 - `.e2e/webhook-ubyx/create_payment_request_tx.json`
 - `.e2e/webhook-ubyx/txhash_create_payment_request.txt`
 - `.e2e/webhook-ubyx/create_payment_request_command.txt`
+- `.e2e/webhook-ubyx/e2e_memo.txt`
+- `.e2e/webhook-ubyx/payment_request_query.json`
+- `.e2e/webhook-ubyx/payment_request_query.http.txt`
+- `.e2e/webhook-ubyx/payment_request_qr.json`
+- `.e2e/webhook-ubyx/payment_request_qr.http.txt`
 - `.e2e/webhook-ubyx/merchant_query_by_id.json`
 - `.e2e/webhook-ubyx/merchant_query_all.json`
 - `.e2e/webhook-ubyx/create_merchant_broadcast.json`
@@ -606,6 +660,8 @@ Após `make e2e-webhook-ubyx-full`:
 - `.e2e/webhook-ubyx/pay_request_broadcast.json`
 - `.e2e/webhook-ubyx/pay_request_broadcast.stderr.txt`
 - `.e2e/webhook-ubyx/pay_request_broadcast.raw.txt`
+- `.e2e/webhook-ubyx/pay_request_tx.json`
+- `.e2e/webhook-ubyx/pay_request_command.txt`
 - `.e2e/webhook-ubyx/merchant_id.txt`
 - `.e2e/webhook-ubyx/merchant_signer_info.txt`
 - `.e2e/webhook-ubyx/merchant_account_onchain.json`
@@ -616,3 +672,26 @@ Após `make e2e-webhook-ubyx-full`:
 - `.e2e/webhook-ubyx/env_summary.txt` (sem segredos)
 - `.e2e/webhook-ubyx/startup_command.txt` (mascarado)
 - `.e2e/webhook-ubyx/failure_reason.txt` (quando houver falha)
+
+## Confirmacao real do E2E
+
+Execucao validada em ambiente real:
+
+- marcador final observado: `E2E_UBYX_OK request_id=6`
+- payload de pagamento observado:
+  - `loja_id=1`
+  - `amount_ubyx=500000`
+- payload final de webhook observado:
+  - `request_id=6`
+  - `loja_id=1`
+  - `amount_ubyx=500000`
+  - `paid_at_unix=<unix>`
+- marcadores de progresso observados:
+  - `PAY_REQUEST_START`
+  - `PAY_REQUEST_DONE`
+- estado do webhook confirmado em `state.json`
+
+Observacao:
+
+- os artefatos em `.e2e/webhook-ubyx/` sao apenas locais de diagnostico;
+- `.e2e/` deve permanecer fora do commit.

@@ -9,6 +9,7 @@ BYX_CHAIN_ID="${BYX_CHAIN_ID:-}"
 BYXD_BIN="${BYXD_BIN:-byxd}"
 LOJA_ID="${LOJA_ID:-1}"
 AMOUNT_UBYX="${AMOUNT_UBYX:-500000}"
+E2E_MEMO="${E2E_MEMO:-e2e-webhook-ubyx-$(date +%s)-$$}"
 MERCHANT_KEY="${MERCHANT_KEY:-merchant}"
 PAYER_KEY="${PAYER_KEY:-payer}"
 KEYRING_BACKEND="${KEYRING_BACKEND:-test}"
@@ -29,6 +30,11 @@ CREATE_REQUEST_BROADCAST_RAW_TXT="$E2E_DIR/create_payment_request_broadcast.raw.
 CREATE_REQUEST_TX_JSON="$E2E_DIR/create_payment_request_tx.json"
 TXHASH_CREATE_REQUEST_TXT="$E2E_DIR/txhash_create_payment_request.txt"
 REQUEST_ID_TXT="$E2E_DIR/request_id.txt"
+E2E_MEMO_TXT="$E2E_DIR/e2e_memo.txt"
+PAYMENT_REQUEST_QUERY_JSON="$E2E_DIR/payment_request_query.json"
+PAYMENT_REQUEST_QUERY_HTTP_TXT="$E2E_DIR/payment_request_query.http.txt"
+PAYMENT_REQUEST_QR_JSON="$E2E_DIR/payment_request_qr.json"
+PAYMENT_REQUEST_QR_HTTP_TXT="$E2E_DIR/payment_request_qr.http.txt"
 WAIT_TX_LAST_RESPONSE_TXT="$E2E_DIR/wait_tx_last_response.txt"
 CREATE_REQUEST_COMMAND_TXT="$E2E_DIR/create_payment_request_command.txt"
 MERCHANT_ACCOUNT_ONCHAIN_JSON="$E2E_DIR/merchant_account_onchain.json"
@@ -44,11 +50,14 @@ MERCHANT_ID_TXT="$E2E_DIR/merchant_id.txt"
 PAY_REQUEST_BROADCAST_JSON="$E2E_DIR/pay_request_broadcast.json"
 PAY_REQUEST_BROADCAST_STDERR_TXT="$E2E_DIR/pay_request_broadcast.stderr.txt"
 PAY_REQUEST_BROADCAST_RAW_TXT="$E2E_DIR/pay_request_broadcast.raw.txt"
+PAY_REQUEST_TX_JSON="$E2E_DIR/pay_request_tx.json"
+PAY_REQUEST_COMMAND_TXT="$E2E_DIR/pay_request_command.txt"
 
 log() { echo "$*" >&2; }
 die() { log "ERROR: $*"; exit 1; }
 
 mkdir -p "$E2E_DIR"
+printf '%s\n' "$E2E_MEMO" >"$E2E_MEMO_TXT"
 
 need() { command -v "$1" >/dev/null 2>&1 || die "missing command: $1"; }
 need_byxd_bin() {
@@ -144,6 +153,7 @@ log_sanitized_create_request_command() {
 BYXD_BIN=$BYXD_BIN
 loja_id=$LOJA_ID
 amount_ubyx=$AMOUNT_UBYX
+memo=$E2E_MEMO
 from=$MERCHANT_KEY
 chain_id=$chain_id
 node=$BYX_RPC
@@ -151,9 +161,27 @@ fees=0ubyx
 gas=auto
 gas_adjustment=1.3
 keyring_backend=$KEYRING_BACKEND
-command=$BYXD_BIN tx payments create-payment-request $LOJA_ID $AMOUNT_UBYX --from $MERCHANT_KEY --keyring-backend $KEYRING_BACKEND --chain-id $chain_id --node $BYX_RPC --fees 0ubyx --gas auto --gas-adjustment 1.3 --broadcast-mode sync --yes --output json
+command=$BYXD_BIN tx payments create-payment-request $LOJA_ID $AMOUNT_UBYX --memo $E2E_MEMO --from $MERCHANT_KEY --keyring-backend $KEYRING_BACKEND --chain-id $chain_id --node $BYX_RPC --fees 0ubyx --gas auto --gas-adjustment 1.3 --broadcast-mode sync --yes --output json
 EOF
   sed 's/^/CREATE_REQUEST_CMD /' "$CREATE_REQUEST_COMMAND_TXT" >&2
+}
+
+log_sanitized_pay_request_command() {
+  local req_id=$1
+  local chain_id=$2
+  cat >"$PAY_REQUEST_COMMAND_TXT" <<EOF
+BYXD_BIN=$BYXD_BIN
+request_id=$req_id
+from=$PAYER_KEY
+chain_id=$chain_id
+node=$BYX_RPC
+fees=0ubyx
+gas=auto
+gas_adjustment=1.3
+keyring_backend=$KEYRING_BACKEND
+command=$BYXD_BIN tx payments pay-payment-request $req_id --from $PAYER_KEY --keyring-backend $KEYRING_BACKEND --chain-id $chain_id --node $BYX_RPC --fees 0ubyx --gas auto --gas-adjustment 1.3 --broadcast-mode sync --yes --output json
+EOF
+  sed 's/^/PAY_REQUEST_CMD /' "$PAY_REQUEST_COMMAND_TXT" >&2
 }
 
 extract_account_number_from_file() {
@@ -297,6 +325,35 @@ run_tx_json() {
   printf '%s\n' "$txhash"
 }
 
+curl_json_checked() {
+  local label=$1
+  local url=$2
+  local out_file=$3
+  local http_file=$4
+  local tmp_body http_code
+
+  tmp_body="$(mktemp)"
+  http_code="$(curl -sS -o "$tmp_body" -w '%{http_code}' "$url" || true)"
+  cp "$tmp_body" "$out_file"
+  printf '%s\n' "$http_code" >"$http_file"
+
+  if [[ ! "$http_code" =~ ^2[0-9][0-9]$ ]]; then
+    log "$label failed: url=$url http_code=$http_code"
+    sed -n '1,200p' "$out_file" >&2 || true
+    rm -f "$tmp_body"
+    die "$label failed: http_code=$http_code"
+  fi
+
+  if ! json_file_is_valid "$out_file"; then
+    log "$label failed: url=$url http_code=$http_code invalid_json"
+    sed -n '1,200p' "$out_file" >&2 || true
+    rm -f "$tmp_body"
+    die "$label failed: invalid json"
+  fi
+
+  rm -f "$tmp_body"
+}
+
 query_merchant_by_id() {
   local merchant_id=$1
   if "$BYXD_BIN" query lojas merchant "$merchant_id" --node "$BYX_RPC" -o json >"$MERCHANT_QUERY_BY_ID_JSON" 2>/dev/null; then
@@ -358,13 +415,11 @@ log_merchant_prerequisite_state() {
 }
 
 ensure_merchant_or_loja() {
-  local merchant_addr chain_id existing_creator existing_id txhash txfile
+  local merchant_addr existing_creator existing_id txhash txfile
   local -a tx_args=()
   local arg
 
   merchant_addr="$("$BYXD_BIN" keys show "$MERCHANT_KEY" -a --keyring-backend "$KEYRING_BACKEND")"
-  chain_id="$(resolve_chain_id)"
-
   if query_merchant_by_id "$LOJA_ID"; then
     require_json_file "$MERCHANT_QUERY_BY_ID_JSON" "merchant query by id"
     existing_creator="$(extract_merchant_creator_from_file "$MERCHANT_QUERY_BY_ID_JSON")"
@@ -467,7 +522,6 @@ wait_tx() {
     if "$BYXD_BIN" q tx "$txhash" --node "$BYX_RPC" -o json >"$stdout_file" 2>"$stderr_file"; then
       if json_file_is_valid "$stdout_file"; then
         mv "$stdout_file" "$txfile"
-        cp "$txfile" "$CREATE_REQUEST_TX_JSON"
         rm -f "$stderr_file"
         return 0
       fi
@@ -505,7 +559,7 @@ extract_request_id_from_tx() {
     first(
       all_events
       | select(
-          any((.type | maybe_decoded); . == "byx_payment_request_created")
+          any((.type | maybe_decoded); . == "byx_payment_request_created" or . == "byx_payment_request_reused")
           or any(.attributes[]?; any((.key | maybe_decoded); . == "request_id"))
         )
       | .attributes[]?
@@ -544,7 +598,7 @@ log_tx_events() {
 }
 
 create_request() {
-  local txhash txfile req_id chain_id
+  local txhash req_id chain_id
   local -a tx_args=()
   local arg
 
@@ -565,14 +619,14 @@ create_request() {
     "$BYXD_BIN" tx payments create-payment-request \
       "$LOJA_ID" \
       "$AMOUNT_UBYX" \
+      --memo "$E2E_MEMO" \
       "${tx_args[@]}")"
   printf '%s\n' "$txhash" >"$TXHASH_CREATE_REQUEST_TXT"
 
-  txfile="$(mktemp)"
-  wait_tx "$txhash" "$txfile"
-  require_json_file "$txfile" "create-payment-request tx query"
+  wait_tx "$txhash" "$CREATE_REQUEST_TX_JSON"
+  require_json_file "$CREATE_REQUEST_TX_JSON" "create-payment-request tx query"
 
-  req_id="$(extract_request_id_from_tx "$txfile" | tail -n1)"
+  req_id="$(extract_request_id_from_tx "$CREATE_REQUEST_TX_JSON" | tail -n1)"
 
   if [[ -z "$req_id" ]]; then
     req_id="$(curl -s "$BYX_REST/byx/payments/v1/payment_requests/by_loja/$LOJA_ID?pagination.limit=1&pagination.reverse=true" | jq -r '.payment_requests[0].id // .paymentRequests[0].id // empty')"
@@ -580,8 +634,7 @@ create_request() {
 
   if [[ -z "$req_id" ]]; then
     log "available tx events for txhash=$txhash:"
-    log_tx_events "$txfile"
-    rm -f "$txfile"
+    log_tx_events "$CREATE_REQUEST_TX_JSON"
     die "could not resolve request_id from indexed tx events"
   fi
 
@@ -595,10 +648,10 @@ create_request() {
       .tx_response.logs[]?.events[]?
     ]
     | .[]
-    | select(.type=="byx_payment_request_created")
+    | select(.type=="byx_payment_request_created" or .type=="byx_payment_request_reused")
     | .attributes[]?
     | select(.key=="amount_ubyx")
-  ' "$txfile" >/dev/null || die "create event missing amount_ubyx"
+  ' "$CREATE_REQUEST_TX_JSON" >/dev/null || die "create event missing amount_ubyx"
   jq -e '
     [
       .events[]?,
@@ -609,34 +662,103 @@ create_request() {
     | .[]
     | .attributes[]?
     | select(.key=="amount_microbyx")
-  ' "$txfile" >/dev/null && die "found deprecated amount_microbyx in create event"
+  ' "$CREATE_REQUEST_TX_JSON" >/dev/null && die "found deprecated amount_microbyx in create event"
 
-  rm -f "$txfile"
   echo "$req_id"
 }
 
 assert_query_fields() {
   local req_id=$1
-  local qr pr
-  qr="$(curl -sf "$BYX_REST/byx/payments/v1/payment_requests/$req_id/qr")"
-  pr="$(curl -sf "$BYX_REST/byx/payments/v1/payment_requests/$req_id")"
+  local qr_url pr_url
+  local qr_amount pr_amount pr_status qr_payload_amt qr_request_id
+  log "ASSERT_QUERY_FIELDS_START request_id=$req_id"
+  qr_url="$BYX_REST/byx/payments/v1/payment_requests/$req_id/qr"
+  pr_url="$BYX_REST/byx/payments/v1/payment_requests/$req_id"
 
-  echo "$qr" | jq -e '.amount_ubyx' >/dev/null || die "QR response missing amount_ubyx"
-  echo "$qr" | jq -e 'has("amount_microbyx")' >/dev/null && die "QR response still has amount_microbyx"
-  echo "$pr" | jq -e '.payment_request.amount_ubyx // .paymentRequest.amount_ubyx' >/dev/null || die "payment request missing amount_ubyx"
-  echo "$pr" | jq -e '.payment_request.amount_microbyx // .paymentRequest.amount_microbyx' >/dev/null && die "payment request still has amount_microbyx"
+  curl_json_checked "payment request qr query" "$qr_url" "$PAYMENT_REQUEST_QR_JSON" "$PAYMENT_REQUEST_QR_HTTP_TXT"
+  curl_json_checked "payment request query" "$pr_url" "$PAYMENT_REQUEST_QUERY_JSON" "$PAYMENT_REQUEST_QUERY_HTTP_TXT"
+
+  qr_amount="$(jq -r '(.amount_ubyx // empty) | tostring' "$PAYMENT_REQUEST_QR_JSON")"
+  if [[ -z "$qr_amount" ]]; then
+    log "QR response missing amount_ubyx: $PAYMENT_REQUEST_QR_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QR_JSON" >&2 || true
+    die "QR response missing amount_ubyx"
+  fi
+  if jq -e 'has("amount_microbyx")' "$PAYMENT_REQUEST_QR_JSON" >/dev/null 2>&1; then
+    log "QR response still has amount_microbyx: $PAYMENT_REQUEST_QR_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QR_JSON" >&2 || true
+    die "QR response still has amount_microbyx"
+  fi
+
+  pr_amount="$(jq -r '(.payment_request.amount_ubyx // .paymentRequest.amount_ubyx // empty) | tostring' "$PAYMENT_REQUEST_QUERY_JSON")"
+  if [[ -z "$pr_amount" ]]; then
+    log "payment request response missing amount_ubyx: $PAYMENT_REQUEST_QUERY_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QUERY_JSON" >&2 || true
+    die "payment request missing amount_ubyx"
+  fi
+  if jq -e '.payment_request.amount_microbyx // .paymentRequest.amount_microbyx' "$PAYMENT_REQUEST_QUERY_JSON" >/dev/null 2>&1; then
+    log "payment request still has amount_microbyx: $PAYMENT_REQUEST_QUERY_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QUERY_JSON" >&2 || true
+    die "payment request still has amount_microbyx"
+  fi
+
+  if [[ "$qr_amount" != "$AMOUNT_UBYX" ]]; then
+    log "QR response amount mismatch expected=$AMOUNT_UBYX got=$qr_amount file=$PAYMENT_REQUEST_QR_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QR_JSON" >&2 || true
+    die "QR response amount_ubyx mismatch"
+  fi
+  if [[ "$pr_amount" != "$AMOUNT_UBYX" ]]; then
+    log "payment request amount mismatch expected=$AMOUNT_UBYX got=$pr_amount file=$PAYMENT_REQUEST_QUERY_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QUERY_JSON" >&2 || true
+    die "payment request amount_ubyx mismatch"
+  fi
+
+  pr_status="$(jq -r '.payment_request.status // .paymentRequest.status // empty' "$PAYMENT_REQUEST_QUERY_JSON")"
+  if [[ "$pr_status" != "PAYMENT_STATUS_PENDING" ]]; then
+    log "payment request status mismatch expected=PAYMENT_STATUS_PENDING got=$pr_status file=$PAYMENT_REQUEST_QUERY_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QUERY_JSON" >&2 || true
+    die "payment request status before pay must be PAYMENT_STATUS_PENDING"
+  fi
+
+  qr_request_id="$(jq -r '(.request_id // empty) | tostring' "$PAYMENT_REQUEST_QR_JSON")"
+  if [[ "$qr_request_id" != "$req_id" ]]; then
+    log "QR response request_id mismatch expected=$req_id got=$qr_request_id file=$PAYMENT_REQUEST_QR_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QR_JSON" >&2 || true
+    die "QR response request_id mismatch"
+  fi
+
+  qr_payload_amt="$(jq -r '
+    .qr_payload // empty
+    | fromjson?
+    | (.amt // empty)
+    | tostring
+  ' "$PAYMENT_REQUEST_QR_JSON")"
+  if [[ -z "$qr_payload_amt" ]]; then
+    log "QR payload missing amt: $PAYMENT_REQUEST_QR_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QR_JSON" >&2 || true
+    die "QR payload missing amt"
+  fi
+  if [[ "$qr_payload_amt" != "$AMOUNT_UBYX" ]]; then
+    log "QR payload amt mismatch expected=$AMOUNT_UBYX got=$qr_payload_amt file=$PAYMENT_REQUEST_QR_JSON"
+    sed -n '1,200p' "$PAYMENT_REQUEST_QR_JSON" >&2 || true
+    die "QR payload amt mismatch"
+  fi
+  log "ASSERT_QUERY_FIELDS_OK request_id=$req_id"
 }
 
 pay_request() {
   local req_id=$1
   local -a tx_args=()
   local arg
-  local txhash
+  local txhash chain_id
   while IFS= read -r arg; do
     [[ -n "$arg" ]] && tx_args+=("$arg")
   done < <(tx_common_args "$PAYER_KEY")
   (( ${#tx_args[@]} > 0 )) || die "failed to build tx args"
   validate_real_tx_args "${tx_args[@]}"
+  chain_id="$(resolve_chain_id)"
+  log_sanitized_pay_request_command "$req_id" "$chain_id"
+  log "PAY_REQUEST_START request_id=$req_id"
 
   txhash="$(run_tx_json \
     "pay-payment-request" \
@@ -645,15 +767,19 @@ pay_request() {
     "$PAY_REQUEST_BROADCAST_RAW_TXT" \
     -- \
     "$BYXD_BIN" tx payments pay-payment-request \
-      --request-id "$req_id" \
+      "$req_id" \
       "${tx_args[@]}")"
   log "PAY_REQUEST_TXHASH=$txhash"
+  wait_tx "$txhash" "$PAY_REQUEST_TX_JSON"
 
   local start status
   start="$(date +%s)"
   while true; do
     status="$(curl -s "$BYX_REST/byx/payments/v1/payment_requests/$req_id" | jq -r '.payment_request.status // .paymentRequest.status // empty')"
-    [[ "$status" == "PAYMENT_STATUS_PAID" ]] && return 0
+    if [[ "$status" == "PAYMENT_STATUS_PAID" ]]; then
+      log "PAY_REQUEST_DONE request_id=$req_id"
+      return 0
+    fi
     (( $(date +%s) - start > PAY_TIMEOUT_S )) && die "timeout waiting PAID (last=$status)"
     sleep 1
   done
