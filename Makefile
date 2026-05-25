@@ -115,6 +115,12 @@ preflight-webhook-ubyx:
 	@bash -o pipefail -c 'BYX_CHAIN_MODE="$${BYX_CHAIN_MODE:-}" \
 	BYX_REST="$${BYX_REST:-http://127.0.0.1:1317}" \
 	BYX_RPC="$${BYX_RPC:-http://127.0.0.1:26657}" \
+	KEYRING_BACKEND="$${KEYRING_BACKEND:-test}" \
+	MERCHANT_KEY="$${MERCHANT_KEY:-merchant}" \
+	PAYER_KEY="$${PAYER_KEY:-payer}" \
+	AMOUNT_UBYX="$${AMOUNT_UBYX:-500000}" \
+	MIN_MERCHANT_BALANCE_UBYX="$${MIN_MERCHANT_BALANCE_UBYX:-1}" \
+	MIN_PAYER_BALANCE_UBYX="$${MIN_PAYER_BALANCE_UBYX:-$${AMOUNT_UBYX:-500000}}" \
 	bash scripts/preflight_webhook_ubyx.sh | tee $(E2E_WEBHOOK_UBYX_DIR)/preflight.log'
 
 doctor-webhook-ubyx:
@@ -130,6 +136,7 @@ e2e-webhook-ubyx:
 	@bash -o pipefail -c 'BYX_CHAIN_MODE="$${BYX_CHAIN_MODE:-}" \
 	BYX_REST="$${BYX_REST:-http://127.0.0.1:1317}" \
 	BYX_RPC="$${BYX_RPC:-http://127.0.0.1:26657}" \
+	STATE_PATH="$${STATE_PATH:-$(PWD)/$(E2E_WEBHOOK_UBYX_DIR)/state.json}" \
 	bash scripts/e2e_payments_webhook_ubyx.sh | tee $(E2E_WEBHOOK_UBYX_DIR)/e2e.log'
 
 stack-webhook-ubyx-up:
@@ -144,7 +151,7 @@ stack-webhook-ubyx-up:
 	MOCK_MERCHANT_URL="$${MOCK_MERCHANT_URL:-http://127.0.0.1:4000/webhook}" \
 	MERCHANT_WEBHOOK_SECRET="$${MERCHANT_WEBHOOK_SECRET:-devsecret}" \
 	MOCK_EVENTS_LOG_PATH="$${MOCK_EVENTS_LOG_PATH:-$(E2E_WEBHOOK_UBYX_DIR)/mock-events.jsonl}" \
-	STATE_PATH="$${STATE_PATH:-$(PWD)/webhook-relay/state.json}" \
+	STATE_PATH="$${STATE_PATH:-$(PWD)/$(E2E_WEBHOOK_UBYX_DIR)/state.json}" \
 	STRICT_WEBHOOK="$${STRICT_WEBHOOK:-1}" \
 	bash scripts/e2e_webhook_ubyx_stack_up.sh
 
@@ -164,6 +171,12 @@ stack-webhook-ubyx-logs:
 	  fi; \
 	done
 
+e2e-webhook-ubyx-keys:
+	@bash -o pipefail -c 'KEYRING_BACKEND="$${KEYRING_BACKEND:-test}" \
+	MERCHANT_KEY="$${MERCHANT_KEY:-merchant}" \
+	BYX_REST="$${BYX_REST:-http://127.0.0.1:1317}" \
+	bash scripts/e2e_webhook_ubyx_keys_setup.sh'
+
 e2e-webhook-ubyx-external:
 	@BYX_CHAIN_MODE=external $(MAKE) e2e-webhook-ubyx-full
 
@@ -182,11 +195,11 @@ e2e-webhook-ubyx-full:
 	if [ $$STATUS -eq 0 ]; then echo ">>> e2e"; $(MAKE) e2e-webhook-ubyx || STATUS=$$?; fi; \
 	echo ">>> collect artifacts"; \
 	E2E_DIR="$(E2E_WEBHOOK_UBYX_DIR)" \
-	STATE_PATH="$${STATE_PATH:-$(PWD)/webhook-relay/state.json}" \
+	STATE_PATH="$${STATE_PATH:-$(PWD)/$(E2E_WEBHOOK_UBYX_DIR)/state.json}" \
 	MOCK_EVENTS_LOG_PATH="$${MOCK_EVENTS_LOG_PATH:-$(E2E_WEBHOOK_UBYX_DIR)/mock-events.jsonl}" \
 	bash scripts/e2e_webhook_ubyx_collect_artifacts.sh; \
 	echo ">>> stack down"; \
 	$(MAKE) stack-webhook-ubyx-down; \
 	exit $$STATUS
 
-.PHONY: preflight-webhook-ubyx doctor-webhook-ubyx e2e-webhook-ubyx stack-webhook-ubyx-up stack-webhook-ubyx-down stack-webhook-ubyx-logs e2e-webhook-ubyx-full e2e-webhook-ubyx-external e2e-webhook-ubyx-byxd e2e-webhook-ubyx-custom
+.PHONY: preflight-webhook-ubyx doctor-webhook-ubyx e2e-webhook-ubyx stack-webhook-ubyx-up stack-webhook-ubyx-down stack-webhook-ubyx-logs e2e-webhook-ubyx-keys e2e-webhook-ubyx-full e2e-webhook-ubyx-external e2e-webhook-ubyx-byxd e2e-webhook-ubyx-custom

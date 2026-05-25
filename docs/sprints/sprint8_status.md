@@ -395,3 +395,122 @@ Diretorio `.e2e/webhook-ubyx/` agora inclui:
 1. executar `BYX_CHAIN_MODE=external STRICT_WEBHOOK=1 make e2e-webhook-ubyx-full` em ambiente com chain ativa;
 2. capturar evidencia com `E2E_UBYX_OK`;
 3. avancar para ramp sandbox Pix/BYX (sem dinheiro real).
+
+## Correcao do health check do mock merchant (2026-05-25)
+
+### Causa raiz confirmada
+
+- chain externa podia estar saudavel em `1317/26657`, mas o stack-up falhava em `mock merchant did not become healthy`;
+- o mock merchant nao tinha endpoint de saude HTTP;
+- health check antigo usava URL de webhook (`/webhook`) com `GET`, recebendo `404`.
+
+### Correcao aplicada
+
+- `webhook-relay/mock-merchant/server.js` agora expoe:
+  - `GET /health` -> `200 {"ok":true,"service":"mock-merchant"}`
+  - `GET /healthz` -> alias
+- `scripts/e2e_webhook_ubyx_stack_up.sh` agora:
+  - valida saude do mock em `.../health` (ou `MOCK_MERCHANT_HEALTH_URL`);
+  - respeita `MOCK_MERCHANT_PORT`/porta derivada de `MOCK_MERCHANT_URL`;
+  - em falha, imprime URL testada, caminho do log, tail do log e comando manual de validacao.
+
+### Validacao manual desta tarefa
+
+- `node --check webhook-relay/mock-merchant/server.js`: ok
+- `curl -i http://127.0.0.1:4000/health`: retornou `HTTP/1.1 200 OK`
+- body: `{"ok":true,"service":"mock-merchant"}`
+
+### Resultado do E2E neste ambiente
+
+Comando:
+
+- `BYX_CHAIN_MODE=external BYX_REST=http://127.0.0.1:1317 BYX_RPC=http://127.0.0.1:26657 STRICT_WEBHOOK=1 make e2e-webhook-ubyx-full`
+
+Resultado:
+
+- falha antes do mock por indisponibilidade local de REST/RPC (`external mode requires an already running chain ...`);
+- portanto `E2E_UBYX_OK` ainda nao apareceu nesta execucao local.
+
+### Proximo passo recomendado
+
+1. manter tunel/chain externa ativa e reexecutar o comando E2E;
+2. confirmar que o stack-up passa do health check do mock;
+3. capturar evidencia final com `E2E_UBYX_OK`.
+
+## Correcao do bootstrap do webhook relay (2026-05-25)
+
+### Causa raiz confirmada
+
+- com chain externa e mock saudaveis, o fluxo passou a falhar na subida do relay;
+- startup antigo era `node --loader ts-node/esm index.ts`;
+- em Node 20 no ambiente atual, o processo abortava com warning/exception antes do loop de polling;
+- `state.json` nao era criado e o stack-up encerrava com `webhook relay did not bootstrap state file`.
+
+### Correcao aplicada
+
+- `webhook-relay/package.json`:
+  - `start` alterado para `tsx index.ts`;
+  - `typecheck` padronizado para `tsc --noEmit`;
+  - `tsx` adicionado em `devDependencies`.
+- `webhook-relay/index.ts`:
+  - cria `dirname(STATE_PATH)` com `mkdir -p` antes de ler/gravar estado.
+- `scripts/e2e_webhook_ubyx_stack_up.sh`:
+  - `STATE_PATH` padrao do fluxo E2E passou para `.e2e/webhook-ubyx/state.json`;
+  - cria diretório pai de `STATE_PATH` antes de subir relay;
+  - em falha do relay, imprime comando usado, `STATE_PATH`, tail do log e aviso de `state.json` ausente.
+- `scripts/e2e_payments_webhook_ubyx.sh`:
+  - default de `STATE_PATH` alinhado para `.e2e/webhook-ubyx/state.json`.
+- `Makefile`:
+  - `stack-webhook-ubyx-up`, `e2e-webhook-ubyx` e coleta de artefatos alinhados para o mesmo `STATE_PATH`.
+
+### Validacao manual desta tarefa
+
+- `STATE_PATH="../.e2e/webhook-ubyx/state.json" npm start` cria/bootstrapa o arquivo de estado no path esperado.
+
+### Resultado do E2E neste ambiente
+
+- comando alvo permanece:
+  - `BYX_CHAIN_MODE=external BYX_REST=http://127.0.0.1:1317 BYX_RPC=http://127.0.0.1:26657 STRICT_WEBHOOK=1 make e2e-webhook-ubyx-full`
+- sucesso final depende da disponibilidade efetiva do tunel/chain externa no momento da execucao local.
+
+### Proximo passo recomendado
+
+1. manter tunel/chain externa ativa;
+2. rerodar `make e2e-webhook-ubyx-full`;
+3. capturar `E2E_UBYX_OK` com artefatos `state.json`, `e2e.log` e `mock-events.jsonl`.
+
+## Correcao de diagnostico de keyring para E2E externo (2026-05-25)
+
+### Causa raiz confirmada
+
+- com chain externa, mock e relay saudaveis, o fluxo passou a falhar na primeira tx com:
+  - `ERROR: key 'merchant' not found`
+- o smoke depende de chaves locais para assinatura (`merchant` e `payer`, por padrao);
+- no ambiente local, a chave nao existia no keyring usado.
+
+### Correcao aplicada
+
+- `scripts/preflight_webhook_ubyx.sh` agora valida:
+  - `KEYRING_BACKEND`;
+  - chaves exigidas (`MERCHANT_KEY` e `PAYER_KEY`);
+  - endereco publico de cada chave (sem seed);
+  - saldo em `ubyx` via REST para cada endereco;
+  - falha clara quando saldo for insuficiente.
+- script novo: `scripts/e2e_webhook_ubyx_keys_setup.sh`
+  - cria `merchant` apenas se nao existir;
+  - nao imprime seed phrase;
+  - nao exporta private key;
+  - mostra endereco e saldo atual em `ubyx`.
+- alvo novo no Makefile:
+  - `make e2e-webhook-ubyx-keys`
+
+### Resultado desta etapa
+
+- diagnostico de chaves/saldo ficou explicito antes de tentar transacao;
+- caminho de remediation local ficou reproduzivel sem dados sensiveis.
+
+### Proximo passo recomendado
+
+1. executar `make e2e-webhook-ubyx-keys`;
+2. garantir saldo de teste em `ubyx` para `merchant` e `payer` na devnet;
+3. rerodar `BYX_CHAIN_MODE=external ... make e2e-webhook-ubyx-full` ate obter `E2E_UBYX_OK`.

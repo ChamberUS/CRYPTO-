@@ -13,6 +13,8 @@ type PaymentRequest = {
   payer?: string;
   paid_at_unix?: number;
   paidAtUnix?: number;
+  trace_id?: string;
+  traceId?: string;
   status?: string | number;
 };
 
@@ -38,6 +40,7 @@ type State = {
       lastAttemptAt?: number;
       lastEventId?: string;
       payload?: any;
+      nextRetryAtUnix?: number; // backward compat
     }
   >;
   deadLetters: Array<{
@@ -76,6 +79,7 @@ const REPLAY_DLQ = (process.env.REPLAY_DLQ || "").toLowerCase() === "1";
 const DRY_RUN = (process.env.DRY_RUN || "").toLowerCase() === "true";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const STATE_PATH = process.env.STATE_PATH || path.join(__dirname, "state.json");
+const STATE_DIR = path.dirname(STATE_PATH);
 
 if (!REST_ENDPOINT || !MERCHANT_WEBHOOK_URL || !MERCHANT_WEBHOOK_SECRET || !LOJA_ID) {
   console.error(
@@ -89,6 +93,7 @@ const inflight = new Set<number>();
 let state: State = { sent: {}, failures: {}, deadLetters: [] };
 
 async function loadState() {
+  await fs.mkdir(STATE_DIR, { recursive: true });
   try {
     const buf = await fs.readFile(STATE_PATH, "utf8");
     state = JSON.parse(buf) as State;
@@ -111,6 +116,7 @@ async function loadState() {
 }
 
 async function saveState() {
+  await fs.mkdir(STATE_DIR, { recursive: true });
   await fs.writeFile(STATE_PATH, JSON.stringify(state, null, 2));
 }
 

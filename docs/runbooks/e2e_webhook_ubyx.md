@@ -28,6 +28,50 @@ Quando `BYX_CHAIN_MODE` nao for informado:
 - mock merchant (`webhook-relay/mock-merchant`)
 - webhook relay (`webhook-relay/index.ts`)
 
+## Nota de bootstrap do relay (Node 20+)
+
+Causa raiz observada em falha recente:
+
+- startup antigo do relay: `node --loader ts-node/esm index.ts`
+- em Node 20, esse loader ficou instavel no ambiente e o processo abortava antes do bootstrap;
+- `state.json` nao era criado e o stack-up falhava em `webhook relay did not bootstrap state file`.
+
+Correcao aplicada:
+
+- startup novo do relay: `tsx index.ts`
+- `STATE_PATH` padrao do fluxo E2E: `.e2e/webhook-ubyx/state.json`
+- relay agora cria automaticamente o diretorio pai de `STATE_PATH` antes de gravar estado.
+
+## Nota de saude do mock merchant
+
+Causa raiz observada em falha recente de stack-up:
+
+- o mock merchant respondia apenas `POST /webhook`;
+- o health check anterior testava rota sem endpoint de saude e recebia `404`;
+- isso gerava `mock merchant did not become healthy`.
+
+Agora o mock expoe:
+
+- `GET /health` -> `200` com `{"ok":true,"service":"mock-merchant"}`
+- `GET /healthz` -> alias do mesmo health check
+
+## Nota de chaves locais para E2E externo
+
+Causa raiz observada em execucao contra chain externa:
+
+- erro: `key 'merchant' not found`
+- o E2E assina transacoes locais com chaves do keyring (`merchant` e `payer` por padrao);
+- sem chave local (ou sem saldo em `ubyx`), o smoke nao chega ao `E2E_UBYX_OK`.
+
+Correcao operacional:
+
+- `make e2e-webhook-ubyx-keys` cria/verifica a chave `merchant` (sem imprimir seed);
+- `make preflight-webhook-ubyx` agora valida:
+  - backend de keyring;
+  - existencia das chaves exigidas;
+  - endereco publico;
+  - saldo em `ubyx` para `merchant` e `payer`.
+
 ## Ordem de subida
 
 1. Chain
@@ -74,6 +118,12 @@ make stack-webhook-ubyx-up
 
 ```bash
 make preflight-webhook-ubyx
+```
+
+### 2.1) Setup rapido da chave merchant (opcional)
+
+```bash
+make e2e-webhook-ubyx-keys
 ```
 
 ### 3) Doctor
@@ -145,13 +195,17 @@ make stack-webhook-ubyx-down
 - `MERCHANT_KEY` (default `merchant`)
 - `PAYER_KEY` (default `payer`)
 - `KEYRING_BACKEND` (default `test`)
-- `STATE_PATH` (default `./webhook-relay/state.json`)
+- `STATE_PATH` (default `.e2e/webhook-ubyx/state.json`)
 - `MOCK_MERCHANT_URL` (default `http://127.0.0.1:4000/webhook`)
+- `MOCK_MERCHANT_PORT` (opcional; sobrescreve porta do mock no stack-up)
+- `MOCK_MERCHANT_HEALTH_URL` (opcional; default derivado para `.../health`)
 - `WEBHOOK_RELAY_URL` (opcional, apenas para log)
 - `MOCK_EVENTS_LOG_PATH` (default `/tmp/byx_mock_events.jsonl`)
 - `MERCHANT_WEBHOOK_SECRET`
 - `STRICT_WEBHOOK` (default `1`)
 - `CHAIN_BOOT_TIMEOUT_S` (default `300`)
+- `MIN_MERCHANT_BALANCE_UBYX` (default `1`)
+- `MIN_PAYER_BALANCE_UBYX` (default `AMOUNT_UBYX`)
 
 ## Diagnostico rapido
 
@@ -190,7 +244,59 @@ make doctor-webhook-ubyx
 
 - confirmar relay rodando com `REST_ENDPOINT`/`MERCHANT_WEBHOOK_URL` corretos
 - confirmar `STATE_PATH` acessivel
-- checar `webhook-relay/state.json`
+- checar `.e2e/webhook-ubyx/state.json`
+
+Validacao manual recomendada:
+
+```bash
+cd webhook-relay
+npm install
+npm run typecheck --if-present
+npm run build --if-present
+npm test --if-present
+STATE_PATH="../.e2e/webhook-ubyx/state.json" npm start
+ls -la ../.e2e/webhook-ubyx/state.json
+```
+
+### Chave merchant/payer ausente ou sem saldo
+
+- erro tipico: `ERROR: key 'merchant' not found`
+- acao recomendada:
+
+```bash
+make e2e-webhook-ubyx-keys
+make preflight-webhook-ubyx
+```
+
+- verificar endereco publico de chave:
+
+```bash
+byxd keys show merchant -a --keyring-backend test
+byxd keys show payer -a --keyring-backend test
+```
+
+- verificar saldo em `ubyx` via REST:
+
+```bash
+curl -s "$BYX_REST/cosmos/bank/v1beta1/balances/<ENDERECO>" | jq .
+```
+
+- em chain devnet externa, financiar somente com fundos de teste (sem seed real, sem dinheiro real).
+
+### Mock merchant nao fica saudavel
+
+- erro tipico: `mock merchant did not become healthy`
+- validar manualmente:
+
+```bash
+curl -i http://127.0.0.1:4000/health
+```
+
+- esperado: HTTP `200` com JSON `{"ok":true,"service":"mock-merchant"}`
+- o stack-up agora mostra:
+  - URL de health testada
+  - caminho de `mock-merchant.log`
+  - ultimas linhas do log
 
 ### HMAC invalido
 

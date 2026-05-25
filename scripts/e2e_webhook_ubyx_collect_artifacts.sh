@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 E2E_DIR="${E2E_DIR:-$ROOT_DIR/.e2e/webhook-ubyx}"
-STATE_PATH="${STATE_PATH:-$ROOT_DIR/webhook-relay/state.json}"
+STATE_PATH="${STATE_PATH:-$E2E_DIR/state.json}"
 MOCK_EVENTS_LOG_PATH="${MOCK_EVENTS_LOG_PATH:-$E2E_DIR/mock-events.jsonl}"
 
 mkdir -p "$E2E_DIR"
@@ -11,6 +11,12 @@ mkdir -p "$E2E_DIR"
 copy_if_exists() {
   local src=$1
   local dst=$2
+  if [[ "$src" == "$dst" ]]; then
+    return 0
+  fi
+  if [[ -e "$src" && -e "$dst" ]] && [[ "$src" -ef "$dst" ]]; then
+    return 0
+  fi
   if [[ -f "$src" ]]; then
     cp "$src" "$dst"
   fi

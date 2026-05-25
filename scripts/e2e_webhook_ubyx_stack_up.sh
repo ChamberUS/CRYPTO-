@@ -14,13 +14,16 @@ BYXD_BIN="${BYXD_BIN:-byxd}"
 BYX_HOME="${BYX_HOME:-}"
 BYX_CHAIN_START_CMD="${BYX_CHAIN_START_CMD:-}"
 MOCK_MERCHANT_URL="${MOCK_MERCHANT_URL:-http://127.0.0.1:4000/webhook}"
+MOCK_MERCHANT_PORT="${MOCK_MERCHANT_PORT:-}"
+MOCK_MERCHANT_HEALTH_URL="${MOCK_MERCHANT_HEALTH_URL:-}"
 MERCHANT_WEBHOOK_SECRET="${MERCHANT_WEBHOOK_SECRET:-devsecret}"
 MOCK_EVENTS_LOG_PATH="${MOCK_EVENTS_LOG_PATH:-$E2E_DIR/mock-events.jsonl}"
-STATE_PATH="${STATE_PATH:-$ROOT_DIR/webhook-relay/state.json}"
+STATE_PATH="${STATE_PATH:-$E2E_DIR/state.json}"
 STRICT_WEBHOOK="${STRICT_WEBHOOK:-1}"
 LOJA_ID="${LOJA_ID:-1}"
 POLL_MS="${POLL_MS:-1000}"
 CHAIN_BOOT_TIMEOUT_S="${CHAIN_BOOT_TIMEOUT_S:-300}"
+WEBHOOK_RELAY_START_CMD="${WEBHOOK_RELAY_START_CMD:-npm start}"
 
 CHAIN_START_ATTEMPTED=0
 CHAIN_STARTUP_COMMAND=""
@@ -48,6 +51,31 @@ is_http_up() {
 port_from_url() {
   local url=$1
   echo "$url" | sed -E 's#^[a-z]+://[^:/]+:([0-9]+).*$#\1#'
+}
+
+host_from_url() {
+  local url=$1
+  echo "$url" | sed -E 's#^(https?://[^/:]+).*#\1#'
+}
+
+mock_merchant_port() {
+  if [[ -n "$MOCK_MERCHANT_PORT" ]]; then
+    echo "$MOCK_MERCHANT_PORT"
+    return
+  fi
+  port_from_url "$MOCK_MERCHANT_URL"
+}
+
+mock_merchant_health_url() {
+  if [[ -n "$MOCK_MERCHANT_HEALTH_URL" ]]; then
+    echo "$MOCK_MERCHANT_HEALTH_URL"
+    return
+  fi
+  local host
+  local port
+  host="$(host_from_url "$MOCK_MERCHANT_URL")"
+  port="$(mock_merchant_port)"
+  echo "${host}:${port}/health"
 }
 
 sanitize_endpoint() {
@@ -78,7 +106,10 @@ BYX_RPC=$(sanitize_endpoint "$BYX_RPC")
 BYX_CHAIN_ID=${BYX_CHAIN_ID:-<unset>}
 BYXD_BIN=${BYXD_BIN:-<unset>}
 BYX_HOME=${BYX_HOME:-<unset>}
+MOCK_MERCHANT_URL=$(sanitize_endpoint "$MOCK_MERCHANT_URL")
+MOCK_MERCHANT_HEALTH_URL=$(sanitize_endpoint "$(mock_merchant_health_url)")
 CHAIN_START_ATTEMPTED=$CHAIN_START_ATTEMPTED
+STATE_PATH=$STATE_PATH
 EOF
 
   cat >"$E2E_DIR/startup_command.txt" <<EOF
@@ -213,8 +244,13 @@ start_chain_by_mode() {
 }
 
 start_mock_merchant() {
-  if is_http_up "$MOCK_MERCHANT_URL"; then
-    log "mock merchant already available at $MOCK_MERCHANT_URL"
+  local health_url
+  local port
+  health_url="$(mock_merchant_health_url)"
+  port="$(mock_merchant_port)"
+
+  if is_http_up "$health_url"; then
+    log "mock merchant already available at $health_url"
     return 0
   fi
 
@@ -222,7 +258,7 @@ start_mock_merchant() {
   (
     cd "$ROOT_DIR/webhook-relay/mock-merchant"
     nohup env \
-      PORT="$(port_from_url "$MOCK_MERCHANT_URL")" \
+      PORT="$port" \
       MERCHANT_WEBHOOK_SECRET="$MERCHANT_WEBHOOK_SECRET" \
       MOCK_EVENTS_LOG_PATH="$MOCK_EVENTS_LOG_PATH" \
       npm start >>"$E2E_DIR/mock-merchant.log" 2>&1 &
@@ -232,7 +268,7 @@ start_mock_merchant() {
   local max_wait=20
   local waited=0
   while (( waited < max_wait )); do
-    if is_http_up "$MOCK_MERCHANT_URL"; then
+    if is_http_up "$health_url"; then
       log "mock merchant healthy"
       return 0
     fi
@@ -241,17 +277,31 @@ start_mock_merchant() {
   done
 
   log "mock merchant did not become healthy"
+  log "health url tested: $health_url"
   log "check log: $E2E_DIR/mock-merchant.log"
+  log "last mock log lines:"
+  tail -n 20 "$E2E_DIR/mock-merchant.log" 2>/dev/null | sed 's/^/[stack-up]   /' || true
+  log "manual check: curl -i $health_url"
   return 1
 }
 
 start_webhook_relay() {
-  if [[ -f "$STATE_PATH" ]] && pgrep -f "node --loader ts-node/esm index.ts" >/dev/null 2>&1; then
+  if [[ -f "$E2E_DIR/webhook-relay.pid" ]]; then
+    local existing_pid
+    existing_pid="$(cat "$E2E_DIR/webhook-relay.pid" 2>/dev/null || true)"
+    if [[ -n "$existing_pid" ]] && kill -0 "$existing_pid" >/dev/null 2>&1; then
+      log "webhook relay already running pid=$existing_pid, reusing"
+      return 0
+    fi
+  fi
+
+  if [[ -f "$STATE_PATH" ]] && pgrep -f "tsx index.ts" >/dev/null 2>&1; then
     log "webhook relay appears already running, reusing"
     return 0
   fi
 
   log "starting webhook relay"
+  mkdir -p "$(dirname "$STATE_PATH")"
   (
     cd "$ROOT_DIR/webhook-relay"
     nohup env \
@@ -263,7 +313,7 @@ start_webhook_relay() {
       MOCK_EVENTS_LOG_PATH="$MOCK_EVENTS_LOG_PATH" \
       STRICT_WEBHOOK="$STRICT_WEBHOOK" \
       POLL_MS="$POLL_MS" \
-      npm start >>"$E2E_DIR/webhook-relay.log" 2>&1 &
+      bash -lc "$WEBHOOK_RELAY_START_CMD" >>"$E2E_DIR/webhook-relay.log" 2>&1 &
     echo $! >"$E2E_DIR/webhook-relay.pid"
   )
 
@@ -279,8 +329,12 @@ start_webhook_relay() {
   done
 
   log "webhook relay did not bootstrap state file"
+  log "relay command: $WEBHOOK_RELAY_START_CMD"
   log "state path: $STATE_PATH"
   log "check log: $E2E_DIR/webhook-relay.log"
+  log "last relay log lines:"
+  tail -n 40 "$E2E_DIR/webhook-relay.log" 2>/dev/null | sed 's/^/[stack-up]   /' || true
+  log "state.json was not created by relay bootstrap"
   return 1
 }
 

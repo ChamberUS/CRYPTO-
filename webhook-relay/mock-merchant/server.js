@@ -21,6 +21,13 @@ function appendEvent(event) {
 }
 
 const server = createServer((req, res) => {
+  if (req.method === "GET" && (req.url === "/health" || req.url === "/healthz")) {
+    res.statusCode = 200;
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify({ ok: true, service: "mock-merchant" }));
+    return;
+  }
+
   if (req.method !== "POST" || req.url !== "/webhook") {
     res.statusCode = 404;
     res.end("not found");

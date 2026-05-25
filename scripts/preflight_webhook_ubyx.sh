@@ -4,6 +4,12 @@ set -euo pipefail
 BYX_REST="${BYX_REST:-http://127.0.0.1:1317}"
 BYX_RPC="${BYX_RPC:-http://127.0.0.1:26657}"
 BYX_CHAIN_MODE="${BYX_CHAIN_MODE:-}"
+KEYRING_BACKEND="${KEYRING_BACKEND:-test}"
+MERCHANT_KEY="${MERCHANT_KEY:-merchant}"
+PAYER_KEY="${PAYER_KEY:-payer}"
+AMOUNT_UBYX="${AMOUNT_UBYX:-500000}"
+MIN_MERCHANT_BALANCE_UBYX="${MIN_MERCHANT_BALANCE_UBYX:-1}"
+MIN_PAYER_BALANCE_UBYX="${MIN_PAYER_BALANCE_UBYX:-$AMOUNT_UBYX}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 E2E_DIR="${E2E_DIR:-$ROOT_DIR/.e2e/webhook-ubyx}"
 
@@ -51,6 +57,8 @@ print_mode_guidance() {
   echo "CHAIN_START_ATTEMPT_EXPECTED=$attempted_start"
   echo "PORT_DIAG_REST_1317=endpoint:$BYX_REST"
   echo "PORT_DIAG_RPC_26657=endpoint:$BYX_RPC"
+  echo "KEYRING_BACKEND=$KEYRING_BACKEND"
+  echo "REQUIRED_KEYS=$MERCHANT_KEY,$PAYER_KEY"
 }
 
 print_ignite_buf_hint_if_needed() {
@@ -61,6 +69,59 @@ print_ignite_buf_hint_if_needed() {
     echo "Use BYX_CHAIN_MODE=external for an already running chain,"
     echo "BYX_CHAIN_MODE=byxd for a built binary,"
     echo "or BYX_CHAIN_MODE=custom with BYX_CHAIN_START_CMD."
+  fi
+}
+
+normalize_uint() {
+  local value=$1
+  if [[ ! "$value" =~ ^[0-9]+$ ]]; then
+    echo "0"
+    return
+  fi
+  value="$(echo "$value" | sed -E 's/^0+//')"
+  if [[ -z "$value" ]]; then
+    echo "0"
+  else
+    echo "$value"
+  fi
+}
+
+uint_gte() {
+  local left right
+  left="$(normalize_uint "$1")"
+  right="$(normalize_uint "$2")"
+  if (( ${#left} > ${#right} )); then
+    return 0
+  fi
+  if (( ${#left} < ${#right} )); then
+    return 1
+  fi
+  [[ "$left" > "$right" || "$left" == "$right" ]]
+}
+
+balance_ubyx_for_address() {
+  local address=$1
+  curl -sf "$BYX_REST/cosmos/bank/v1beta1/balances/$address" \
+    | jq -r '(.balances[]? | select(.denom=="ubyx") | .amount) // "0"'
+}
+
+check_key_and_balance() {
+  local key_name=$1
+  local min_balance=$2
+  local address balance
+
+  address="$(byxd keys show "$key_name" -a --keyring-backend "$KEYRING_BACKEND" 2>/dev/null || true)"
+  if [[ -z "$address" ]]; then
+    fail "key '$key_name' not found in keyring backend '$KEYRING_BACKEND'. Run: make e2e-webhook-ubyx-keys"
+  fi
+
+  ok "key available: $key_name address=$address"
+  balance="$(balance_ubyx_for_address "$address")"
+  balance="$(normalize_uint "$balance")"
+  ok "key balance: $key_name ubyx=$balance"
+
+  if ! uint_gte "$balance" "$min_balance"; then
+    fail "insufficient ubyx for key '$key_name' (address $address): have $balance, need at least $min_balance. Fund in devnet and retry."
   fi
 }
 
@@ -88,8 +149,15 @@ else
   fail "RPC unavailable: $BYX_RPC (expected RPC on port 26657)"
 fi
 
-# byxd status should also work in local CLI context
-byxd status >/dev/null 2>&1 \
-  && ok "byxd status available" \
-  || fail "byxd status failed"
+if [[ "$MERCHANT_KEY" == "$PAYER_KEY" ]]; then
+  required_balance="$MIN_PAYER_BALANCE_UBYX"
+  if ! uint_gte "$required_balance" "$MIN_MERCHANT_BALANCE_UBYX"; then
+    required_balance="$MIN_MERCHANT_BALANCE_UBYX"
+  fi
+  check_key_and_balance "$MERCHANT_KEY" "$required_balance"
+else
+  check_key_and_balance "$MERCHANT_KEY" "$MIN_MERCHANT_BALANCE_UBYX"
+  check_key_and_balance "$PAYER_KEY" "$MIN_PAYER_BALANCE_UBYX"
+fi
+
 echo "Preflight webhook/ubyx passed."

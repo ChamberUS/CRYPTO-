@@ -5,7 +5,8 @@
   "description": "Pequeno worker em Node/TS que faz polling no endpoint REST do módulo `payments` e dispara webhooks para o lojista quando um pedido muda para `PAID`.",
   "main": "index.js",
   "scripts": {
-     "start": "node --loader ts-node/esm index.ts",
+    "start": "tsx index.ts",
+    "typecheck": "tsc --noEmit",
     "test": "echo \"No webhook-relay tests yet\""
   },
   "keywords": [],
@@ -14,6 +15,7 @@
   "devDependencies": {
     "@types/node": "^25.0.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
     "typescript": "^5.9.3"
   }
 }
