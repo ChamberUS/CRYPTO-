@@ -785,6 +785,13 @@ Comando manual equivalente:
 - nao houve alteracao de genesis, supply ou saldo;
 - nao houve reintroducao de `MintCoins`.
 
+## Checkpoint final pos-push
+
+- commit de referencia: `7d91eb8`
+- push confirmado: `main -> origin/main`
+- marcador final confirmado: `E2E_UBYX_OK`
+- status do repositorio apos o push: working tree limpo
+
 ## Confirmacao de sucesso do E2E webhook/ubyx (2026-05-25)
 
 ### Resultado no ambiente real
